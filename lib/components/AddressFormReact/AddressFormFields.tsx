@@ -32,7 +32,7 @@ export const AddressFormFields = memo(({ children }: PropsWithChildren) => {
           label={label ?? "Address"}
           placeholder={placeholder ?? "Enter address"}
           className={className}
-          apiName={(getString(rest, "data-api-name") ?? "autocomplete") as TypeaheadAPIName}
+          apiName={(getString(rest, "data-api-name") ?? "suggest") as TypeaheadAPIName}
           showCurrentLocation={getBoolean(rest, "data-show-current-location") ?? true}
         />
       ),
