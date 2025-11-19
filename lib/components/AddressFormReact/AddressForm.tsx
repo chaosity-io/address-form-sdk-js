@@ -1,4 +1,4 @@
-import { Address, AutocompleteFilterPlaceType, GetPlaceIntendedUse } from "@aws-sdk/client-geo-places";
+import { Address, AutocompleteFilterPlaceType, type GetPlaceIntendedUse } from "@aws-sdk/client-geo-places";
 import clsx from "clsx";
 import { ComponentProps, FormEventHandler, FunctionComponent, ReactNode, useEffect, useRef, useState } from "react";
 import { AddressFormAddressField, AddressFormAddressFieldProps } from "./AddressFormAddressField";
@@ -102,7 +102,7 @@ const AddressFormContent: FunctionComponent<AddressFormContentProps> = ({ childr
       // If the user is going to store the results (even for caching purposes),
       // we must make another API call for the same place with the storage option.
       // See: https://docs.aws.amazon.com/location/latest/developerguide/places-intended-use.html
-      if (intendedUse === GetPlaceIntendedUse.STORAGE && data.placeId) {
+      if (intendedUse === "Storage" && data.placeId) {
         await getPlace(client, { PlaceId: data.placeId, IntendedUse: intendedUse });
       }
 

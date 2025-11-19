@@ -1,4 +1,4 @@
-import { AutocompleteFilterPlaceType, GetPlaceIntendedUse } from "@aws-sdk/client-geo-places";
+import { AutocompleteFilterPlaceType } from "@aws-sdk/client-geo-places";
 import { FunctionComponent, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
@@ -186,7 +186,7 @@ const FormEventHandler: FunctionComponent<{
         // If the user is going to store the results (even for caching purposes),
         // we must make another API call for the same place with the storage option.
         // See: https://docs.aws.amazon.com/location/latest/developerguide/places-intended-use.html
-        if (intendedUse === GetPlaceIntendedUse.STORAGE && data.placeId) {
+        if (intendedUse === "Storage" && data.placeId) {
           await getPlace(client, { PlaceId: data.placeId, IntendedUse: intendedUse });
         }
 
