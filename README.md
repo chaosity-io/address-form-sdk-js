@@ -185,18 +185,18 @@ Other countries are in Preview, where the `addressLineOne` field displays the co
 
 #### Props
 
-| Property                        | Type                            | Required | Default | Description                                                                                                                                                                                                                            |
-| ------------------------------- | ------------------------------- | -------- | ------- |----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `apiKey`                        | `string`                        | Yes      | -       | The Amazon Location Service API key used to authenticate requests                                                                                                                                                                      |
-| `region`                        | `string`                        | Yes      | -       | The AWS region where Amazon Location Service is called (e.g., "us-east-1")                                                                                                                                                             |
-| `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag#List_of_common_primary_language_subtags) for localized address suggestions (e.g., "en", "es")                                                                          |
-| `politicalView`                 | `string`                        | No       | -       | Political view for address results, affecting disputed territories display                                                                                                                                                             |
-| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limits autofill suggestions to the country selected in the `Country` field                                                                                                                                                             |
-| `allowedCountries`              | `string[]`                      | No       | -       | Array of ISO country codes (alpha-2 or alpha-3) to restrict address suggestions. See [countries.ts](lib/data/countries.ts) for alpha-2 reference                                                                                       |
-| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Array of [place types](https://docs.aws.amazon.com/location/latest/APIReference/API_geoplaces_AutocompleteFilter.html#location-Type-geoplaces_AutocompleteFilter-IncludePlaceTypes) to filter results (e.g., "Locality", "PostalCode") |
-| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as [longitude, latitude] coordinates. If not provided and a single country is specified in `allowedCountries`, the map centers on that country's capital                                                            |
-| `initialMapZoom`                | `number`                        | No       | Varies  | Initial map zoom level. Defaults: 10 when `initialMapCenter` is provided, 5 when centering on a single allowed country, 1 otherwise                                                                                                    |
-| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback function that receives a `getData` async function for retrieving [form data](https://github.com/aws-geospatial/address-form-sdk-js/blob/30fd74fcad353249ad54cc69c4bc5dd39fda7680/README.md?plain=1#L219) with intendedUse parameter  |
+| Property                        | Type                            | Required | Default | Description                                                                                                                                                                                                                                  |
+| ------------------------------- | ------------------------------- | -------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `apiKey`                        | `string`                        | Yes      | -       | The Amazon Location Service API key used to authenticate requests                                                                                                                                                                            |
+| `region`                        | `string`                        | Yes      | -       | The AWS region where Amazon Location Service is called (e.g., "us-east-1")                                                                                                                                                                   |
+| `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag#List_of_common_primary_language_subtags) for localized address suggestions (e.g., "en", "es")                                                                                |
+| `politicalView`                 | `string`                        | No       | -       | Political view for address results, affecting disputed territories display                                                                                                                                                                   |
+| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limits autofill suggestions to the country selected in the `Country` field                                                                                                                                                                   |
+| `allowedCountries`              | `string[]`                      | No       | -       | Array of ISO country codes (alpha-2 or alpha-3) to restrict address suggestions. See [countries.ts](lib/data/countries.ts) for alpha-2 reference                                                                                             |
+| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Array of [place types](https://docs.aws.amazon.com/location/latest/APIReference/API_geoplaces_AutocompleteFilter.html#location-Type-geoplaces_AutocompleteFilter-IncludePlaceTypes) to filter results (e.g., "Locality", "PostalCode")       |
+| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as [longitude, latitude] coordinates. If not provided and a single country is specified in `allowedCountries`, the map centers on that country's capital                                                                  |
+| `initialMapZoom`                | `number`                        | No       | Varies  | Initial map zoom level. Defaults: 10 when `initialMapCenter` is provided, 5 when centering on a single allowed country, 1 otherwise                                                                                                          |
+| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback function that receives a `getData` async function for retrieving [form data](https://github.com/aws-geospatial/address-form-sdk-js/blob/30fd74fcad353249ad54cc69c4bc5dd39fda7680/README.md?plain=1#L219) with intendedUse parameter |
 
 #### Form Submission Data
 
@@ -246,7 +246,7 @@ All input fields use the `data-type="address-form"` attribute along with a `name
 Primary address input with autofill functionality. See [Supported Countries](#supported-countries) for information about address field parsing behavior in different countries.
 
 | Property                     | Type     | Default         | Description                                                                                                                                            |
-| ---------------------------- | -------- |-----------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ---------------------------- | -------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `label`                      | `string` | "Address"       | Label for the field                                                                                                                                    |
 | `placeholder`                | `string` | "Enter address" | Placeholder text                                                                                                                                       |
 | `data-api-name`              | `string` | "suggest"       | API type: `autocomplete` or `suggest`. Use `suggest` to return both POI and address suggestions, and `autocomplete` to return address-only suggestions |
@@ -297,15 +297,16 @@ Map component for displaying and adjusting address location.
 Map styles consist of two parts: the **map style name** and the **color scheme**. The map style name determines the visual theme (Standard, Monochrome, Hybrid, or Satellite), while the color scheme specifies the brightness variant (Light or Dark) where applicable.
 
 | React Implementation (Array Format) | HTML/JavaScript Implementation (String Format) |
-| ------------------------------------ | ----------------------------------------------- |
-| `['Standard', 'Light']`              | `"Standard,Light"`                              |
-| `['Standard', 'Dark']`               | `"Standard,Dark"`                               |
-| `['Monochrome', 'Light']`            | `"Monochrome,Light"`                            |
-| `['Monochrome', 'Dark']`             | `"Monochrome,Dark"`                             |
-| `['Hybrid']`                         | `"Hybrid"`                                      |
-| `['Satellite']`                      | `"Satellite"`                                   |
+| ----------------------------------- | ---------------------------------------------- |
+| `['Standard', 'Light']`             | `"Standard,Light"`                             |
+| `['Standard', 'Dark']`              | `"Standard,Dark"`                              |
+| `['Monochrome', 'Light']`           | `"Monochrome,Light"`                           |
+| `['Monochrome', 'Dark']`            | `"Monochrome,Dark"`                            |
+| `['Hybrid']`                        | `"Hybrid"`                                     |
+| `['Satellite']`                     | `"Satellite"`                                  |
 
 For detailed descriptions of each map style and color scheme, see [AWS map styles and customization](https://docs.aws.amazon.com/location/latest/developerguide/map-styles.html).
+
 ## Contributing
 
 We welcome community contributions and pull requests. See [CONTRIBUTING](CONTRIBUTING.md) for information on how to set up a development environment, and submit code.
