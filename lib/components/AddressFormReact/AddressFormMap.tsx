@@ -27,7 +27,7 @@ export const AddressFormMap: FunctionComponent<AddressFormMapProps> = ({
         addNotification({
           id: "map-permission-error",
           type: "error",
-          message: "Map rendering is unavailable due to API key permissions. Please contact support for assistance.",
+          message: "Map rendering is currently unavailable. Please contact support for assistance.",
         });
       }
     }

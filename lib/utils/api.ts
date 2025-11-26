@@ -44,7 +44,7 @@ export const suggest = async (client: GeoPlacesClient, input: SuggestCommandInpu
     const command = new SuggestCommand(input);
     return await client.send(command);
   } catch (error) {
-    handleApiError(error, "suggest", "Address suggestion");
+    handleApiError(error, "suggest", "Address suggestions");
     throw error;
   }
 };
@@ -77,6 +77,7 @@ export const reverseGeocode = async (
 
 const handleApiError = (error: unknown, id: string, description: string) => {
   const { addNotification } = useNotificationStore.getState();
+  const verb = description.endsWith("s") ? "are" : "is";
 
   if (error && typeof error === "object" && "$metadata" in error) {
     const metadata = (error as { $metadata?: { httpStatusCode?: number } }).$metadata;
@@ -85,7 +86,7 @@ const handleApiError = (error: unknown, id: string, description: string) => {
       addNotification({
         id: `${id}-permission-error`,
         type: "error",
-        message: `${description} is unavailable due to API key permissions. Please contact support for assistance.`,
+        message: `${description} ${verb} currently unavailable. Please contact support for assistance.`,
       });
 
       throw error;
@@ -94,7 +95,7 @@ const handleApiError = (error: unknown, id: string, description: string) => {
 
   addNotification({
     id: `${id}-unknown-error`,
-    message: `${description}. Please try again later.`,
+    message: `${description} ${verb} currently unavailable. Please contact support for assistance.`,
     type: "error",
   });
 
