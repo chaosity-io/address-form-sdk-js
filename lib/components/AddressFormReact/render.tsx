@@ -41,11 +41,7 @@ export const render = ({ root: selector, ...formProps }: RenderParams) => {
     );
   }
 
-  const container = document.createElement("div");
-  const root = createRoot(container);
-
-  // Mount the container to the form so React components render in the DOM
-  form.appendChild(container);
+  const root = createRoot(ensureAddressFormRoot());
 
   root.render(
     <AmazonLocationProvider apiKey={formProps.apiKey} region={formProps.region}>
@@ -233,4 +229,16 @@ const validateMapStyle = (mapStyleString?: string): MapStyle => {
 
   // For Light scheme, all styles are valid
   return [mapStyle, "Light"];
+};
+
+const ensureAddressFormRoot = (id = "aws-address-form-root"): HTMLElement => {
+  return (
+    document.getElementById(id) ??
+    (() => {
+      const root = document.createElement("div");
+      root.id = id;
+      document.body.appendChild(root);
+      return root;
+    })()
+  );
 };
