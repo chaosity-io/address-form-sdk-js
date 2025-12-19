@@ -67,4 +67,23 @@ describe("notificationStore", () => {
     const { notifications } = useNotificationStore.getState();
     expect(notifications).toEqual([]);
   });
+
+  it("calls onAdd callback when notification is added", () => {
+    const { addNotification } = useNotificationStore.getState();
+    const onAdd = vi.fn();
+
+    addNotification({ message: "Test", type: "error" }, onAdd);
+
+    expect(onAdd).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call onAdd callback for duplicate notifications", () => {
+    const { addNotification } = useNotificationStore.getState();
+    const onAdd = vi.fn();
+
+    addNotification({ id: "test-id", message: "Test", type: "error" }, onAdd);
+    addNotification({ id: "test-id", message: "Test", type: "error" }, onAdd);
+
+    expect(onAdd).toHaveBeenCalledTimes(1);
+  });
 });
