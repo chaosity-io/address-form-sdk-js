@@ -17,8 +17,7 @@ The use of the Address Form will require the following actions to be allowed in 
 | `GetTile`        | Retrieves map tiles for rendering the interactive map       | Displaying a map component                             |
 | `Autocomplete`   | Provides real-time address suggestions as users type        | Using the Autocomplete API for typeahead functionality |
 | `Suggest`        | Provides real-time address suggestions as users type        | Using the Suggest API for typeahead functionality      |
-| `ReverseGeocode` | Converts coordinates to address                             | Allowing users to use their current location           |
-| `GetPlace`       | Retrieves detailed place information for selected addresses | Using the typeahead functionality                      |
+| `GetPlace`       | Retrieves detailed place information for selected addresses | Using the typeahead or current location functionality  |
 
 ### Installation
 
@@ -225,7 +224,7 @@ The returned data object contains the following properties:
 | `country`          | `string`  | Country code (ISO 3166-1 alpha-2)                                                                              |
 | `originalPosition` | `string`  | Original coordinates from API response (longitude,latitude)                                                    |
 | `adjustedPosition` | `string`  | User-adjusted coordinates if map pin was moved (longitude,latitude)                                            |
-| `addressDetails`   | `Address` | Complete address object from Amazon Location Service API (GetPlace/ReverseGeocode response)                    |
+| `addressDetails`   | `Address` | Complete address object from Amazon Location Service API (GetPlace response)                                   |
 
 **Note:** The `addressDetails` property contains the full API response from Amazon Location Service and is only present when the address was populated through our APIs (typeahead selection or locate button). Addresses entered manually by users will not contain this property.
 

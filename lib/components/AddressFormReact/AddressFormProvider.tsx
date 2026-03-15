@@ -1,34 +1,29 @@
-import { AutocompleteFilterPlaceType, GeoPlacesClient } from "@aws-sdk/client-geo-places";
+import { AutocompleteFilterPlaceType } from "@chaosity/location-client";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { FunctionComponent, PropsWithChildren, useMemo, useState } from "react";
 import type { AddressFormData } from "./AddressForm";
 import { AddressFormContext, AddressFormContextType, MapViewState } from "./AddressFormContext";
 import { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
-import { AmazonLocationProvider } from "../AmazonLocationProvider";
+import { queryClient } from "../../utils/query-client";
 import { countries } from "../../data/countries";
 
 export interface AddressFormProps extends PropsWithChildren {
-  apiKey: string;
-  region: string;
   language?: string;
   politicalView?: string;
   showCurrentCountryResultsOnly?: boolean;
   allowedCountries?: string[];
   placeTypes?: AutocompleteFilterPlaceType[];
-  client?: GeoPlacesClient;
   initialMapCenter?: [number, number];
   initialMapZoom?: number;
 }
 
 export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
-  apiKey,
-  region,
   children,
   language,
   politicalView,
   showCurrentCountryResultsOnly,
   allowedCountries,
   placeTypes,
-  client,
   initialMapCenter,
   initialMapZoom,
 }) => {
@@ -67,8 +62,6 @@ export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
 
   const context = useMemo<AddressFormContextType>(
     () => ({
-      apiKey,
-      region,
       data,
       setData: (data: AddressFormData) => setData((state) => ({ ...state, ...data })),
       resetData: () => setData({}),
@@ -85,8 +78,6 @@ export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
       setTypeaheadApiName,
     }),
     [
-      apiKey,
-      region,
       data,
       mapViewState,
       language,
@@ -100,8 +91,8 @@ export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
   );
 
   return (
-    <AmazonLocationProvider region={region} apiKey={apiKey} client={client}>
+    <QueryClientProvider client={queryClient}>
       <AddressFormContext.Provider value={context}>{children}</AddressFormContext.Provider>
-    </AmazonLocationProvider>
+    </QueryClientProvider>
   );
 };

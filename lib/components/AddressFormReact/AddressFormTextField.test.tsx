@@ -7,8 +7,6 @@ const mockSetData = vi.fn();
 const mockSetMapViewState = vi.fn();
 
 const mockContextValue: AddressFormContextType = {
-  apiKey: "test-key",
-  region: "us-east-1",
   data: { city: "Seattle" },
   setData: mockSetData,
   setMapViewState: mockSetMapViewState,

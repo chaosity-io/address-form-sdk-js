@@ -1,14 +1,20 @@
-import { useContext } from "react";
-import AmazonLocationContext from "../context/amazon-location-context";
+import { useLocationClient } from "@chaosity/location-client-react";
 
+/**
+ * Compatibility hook — wraps useLocationClient() from @chaosity/location-client-react.
+ * Returns the GeoPlacesClient from context, or throws if not available and not loading.
+ * Returns null while the client is still initializing.
+ */
 function useAmazonLocationContext() {
-  const context = useContext(AmazonLocationContext);
+  const { client, loading } = useLocationClient();
 
-  if (!context) {
-    throw new Error("Please wrap this component with <AmazonLocationProvider> component.");
+  if (!client && !loading) {
+    throw new Error(
+      "Location client is not available. Wrap this component with <LocationClientProvider> from @chaosity/location-client-react.",
+    );
   }
 
-  return context;
+  return { client: client!, loading };
 }
 
 export default useAmazonLocationContext;

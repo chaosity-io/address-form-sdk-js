@@ -1,4 +1,5 @@
-import { AutocompleteCommandInput, GeoPlacesClient, SuggestCommandInput } from "@aws-sdk/client-geo-places";
+import { AutocompleteCommandInput, SuggestCommandInput } from "@chaosity/location-client";
+import { GeoPlacesClient } from "@chaosity/location-client";
 import { useQuery } from "@tanstack/react-query";
 import { autocomplete, suggest } from "../../utils/api";
 

@@ -1,4 +1,3 @@
-import { ReverseGeocodeCommandOutput } from "@aws-sdk/client-geo-places";
 import { fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -7,20 +6,17 @@ import * as api from "../../utils/api";
 import { AddressFormAddressField } from "./AddressFormAddressField";
 import { AddressFormContext, AddressFormContextType } from "./AddressFormContext";
 
-// Mock the autocomplete, getPlace, and reverseGeocode functions
+// Mock the autocomplete, getPlace, and suggest functions
 vi.mock("../../utils/api", () => ({
   autocomplete: vi.fn(),
   suggest: vi.fn(),
   getPlace: vi.fn(),
-  reverseGeocode: vi.fn(),
 }));
 
 const mockSetData = vi.fn();
 const mockSetMapViewState = vi.fn();
 
 const mockContextValue: AddressFormContextType = {
-  apiKey: "test-key",
-  region: "us-east-1",
   data: { addressLineOne: "123 Main St", country: "US" },
   setData: mockSetData,
   setMapViewState: mockSetMapViewState,
@@ -271,24 +267,37 @@ describe("AddressFormAddressField", () => {
       setData: mockSetData,
     };
 
-    // Mock reverseGeocode response
-    const mockReverseGeocodeResponse = {
+    // Mock suggest response (used by LocateButton for coordinate lookup)
+    vi.mocked(api.suggest).mockResolvedValue({
       ResultItems: [
         {
-          Address: {
-            Label: "510 W Georgia St, Vancouver, BC",
-            Country: { Code2: "CA", Name: "Canada" },
-            Region: { Name: "BC" },
-            Locality: "Vancouver",
-            PostalCode: "V6B 1Z6",
-            AddressNumber: "510",
-            Street: "W Georgia St",
-          },
-          Position: [-123.1207, 49.2827],
+          SuggestResultItemType: "Place",
+          Title: "510 W Georgia St, Vancouver, BC",
+          Place: { PlaceId: "locate-place-id" },
         },
       ],
-    };
-    vi.mocked(api.reverseGeocode).mockResolvedValue(mockReverseGeocodeResponse as ReverseGeocodeCommandOutput);
+      PricingBucket: "mock-pricing-bucket",
+      $metadata: {},
+    });
+
+    // Mock getPlace response
+    vi.mocked(api.getPlace).mockResolvedValue({
+      PlaceId: "locate-place-id",
+      PlaceType: "Street",
+      Title: "510 W Georgia St",
+      PricingBucket: "mock-pricing-bucket",
+      Address: {
+        Label: "510 W Georgia St, Vancouver, BC",
+        Country: { Code2: "CA", Name: "Canada" },
+        Region: { Name: "BC" },
+        Locality: "Vancouver",
+        PostalCode: "V6B 1Z6",
+        AddressNumber: "510",
+        Street: "W Georgia St",
+      },
+      Position: [-123.1207, 49.2827],
+      $metadata: {},
+    });
 
     // Mock getCurrentPosition to return coordinates
     mockGeolocation.getCurrentPosition.mockImplementation((success) => {
@@ -320,11 +329,22 @@ describe("AddressFormAddressField", () => {
       expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
     });
 
-    // Verify reverseGeocode was called with correct coordinates
+    // Verify suggest was called with coordinates
     await waitFor(() => {
-      expect(api.reverseGeocode).toHaveBeenCalledWith(
+      expect(api.suggest).toHaveBeenCalledWith(
         expect.any(Object), // client
-        expect.objectContaining({ QueryPosition: [-123.1207, 49.2827] }),
+        expect.objectContaining({
+          BiasPosition: [-123.1207, 49.2827],
+          MaxResults: 1,
+        }),
+      );
+    });
+
+    // Verify getPlace was called with the place ID from suggest
+    await waitFor(() => {
+      expect(api.getPlace).toHaveBeenCalledWith(
+        expect.any(Object), // client
+        expect.objectContaining({ PlaceId: "locate-place-id" }),
       );
     });
 
@@ -338,7 +358,6 @@ describe("AddressFormAddressField", () => {
           province: "BC",
           country: "CA",
           originalPosition: "-123.1207,49.2827",
-          addressDetails: mockReverseGeocodeResponse.ResultItems[0].Address,
         }),
       );
     });

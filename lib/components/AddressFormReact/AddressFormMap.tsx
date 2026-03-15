@@ -33,7 +33,7 @@ export const AddressFormMap: FunctionComponent<AddressFormMapProps> = ({
           },
           () => {
             console.error(
-              "Map rendering failed: This is likely due to missing GetTile permissions in the API key configuration. See https://docs.aws.amazon.com/location/latest/developerguide/address-form-sdk.html#address-form-getting-started for API key setup instructions.",
+              "Map rendering failed: This is likely due to insufficient permissions. See https://docs.chaosity.cloud/address-form for setup instructions.",
               error,
             );
           },

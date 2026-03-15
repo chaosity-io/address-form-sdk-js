@@ -1,4 +1,4 @@
-import { AutocompleteFilterPlaceType } from "@aws-sdk/client-geo-places";
+import { AutocompleteFilterPlaceType } from "@chaosity/location-client";
 import { createContext, useContext } from "react";
 import type { AddressFormData } from "./AddressForm";
 import { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
@@ -10,8 +10,6 @@ export interface MapViewState {
 }
 
 export interface AddressFormContextType {
-  apiKey: string;
-  region: string;
   data: AddressFormData;
   setData: (data: AddressFormData) => void;
   resetData?: () => void;

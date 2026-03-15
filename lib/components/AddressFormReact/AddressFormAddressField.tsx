@@ -37,6 +37,7 @@ export const AddressFormAddressField = memo(
         country: value.fullAddress?.Country?.Code2,
         originalPosition: value.position?.join(","),
         addressDetails: value.fullAddress,
+        secondaryAddresses: value.secondaryAddresses,
       });
 
       if (value.position) {

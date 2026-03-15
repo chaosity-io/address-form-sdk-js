@@ -3,6 +3,12 @@ import { fireEvent, act, waitFor, screen } from "@testing-library/react";
 import { render } from "./render";
 import { useNotificationStore } from "../../stores/notificationStore";
 
+const mockGetConfig = async () => ({
+  apiUrl: "https://test-api.chaosity.cloud",
+  token: "test-token",
+  expiresAt: Date.now() + 900_000,
+});
+
 describe("render", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
@@ -13,8 +19,7 @@ describe("render", () => {
     expect(() => {
       render({
         root: "#non-existent-form",
-        apiKey: "test-key",
-        region: "us-east-1",
+        getConfig: mockGetConfig,
       });
     }).toThrow('Address form could not be initialized. No form element found matching selector "#non-existent-form"');
   });
@@ -26,8 +31,7 @@ describe("render", () => {
       act(() => {
         render({
           root: "#test-form",
-          apiKey: "test-key",
-          region: "us-east-1",
+          getConfig: mockGetConfig,
         });
       });
     }).not.toThrow();
@@ -50,8 +54,7 @@ describe("render", () => {
     act(() => {
       render({
         root: "#address-form",
-        apiKey: "test-key",
-        region: "us-east-1",
+        getConfig: mockGetConfig,
       });
     });
 
@@ -71,8 +74,7 @@ describe("render", () => {
     act(() => {
       render({
         root: "#address-form",
-        apiKey: "test-key",
-        region: "us-east-1",
+        getConfig: mockGetConfig,
       });
     });
 
@@ -119,8 +121,7 @@ describe("render", () => {
     act(() => {
       render({
         root: "#address-form",
-        apiKey: "test-key",
-        region: "us-east-1",
+        getConfig: mockGetConfig,
       });
     });
 
@@ -167,8 +168,7 @@ describe("render", () => {
     act(() => {
       render({
         root: "#address-form",
-        apiKey: "test-key",
-        region: "us-east-1",
+        getConfig: mockGetConfig,
       });
     });
 
@@ -215,8 +215,7 @@ describe("render", () => {
     act(() => {
       render({
         root: "#test-form",
-        apiKey: "test-key",
-        region: "us-east-1",
+        getConfig: mockGetConfig,
       });
     });
 

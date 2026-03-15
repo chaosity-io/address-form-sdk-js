@@ -1,6 +1,6 @@
 // Components
 export { AddressForm, type AddressFormData, type SubmitHandler } from "./components/AddressFormReact";
-export { AmazonLocationProvider } from "./components/AmazonLocationProvider";
+export { LocationClientProvider } from "@chaosity/location-client-react";
 export { Button } from "./components/Button";
 export { CountrySelect, type CountrySelectProps } from "./components/CountrySelect";
 export { Flex } from "./components/Flex";

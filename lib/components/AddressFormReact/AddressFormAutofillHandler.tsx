@@ -1,4 +1,4 @@
-import { GeoPlacesClient } from "@aws-sdk/client-geo-places";
+import { GeoPlacesClient, GetPlaceAdditionalFeature } from "@chaosity/location-client";
 import { QueryClient, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
@@ -40,6 +40,7 @@ export const AddressFormAutofillHandler = ({ form }: AddressFormAutofillHandlerP
       getPlaceQuery(client, {
         PlaceId: placeId,
         Language: language,
+        AdditionalFeatures: [GetPlaceAdditionalFeature.SECONDARY_ADDRESSES],
       }),
     );
 
@@ -52,6 +53,7 @@ export const AddressFormAutofillHandler = ({ form }: AddressFormAutofillHandlerP
       country: placeResponse.Address?.Country?.Code2, // This override is required since user might have the country name instead of the code in the saved autofill
       originalPosition: placeResponse.Position?.join(","),
       addressDetails: placeResponse.Address,
+      secondaryAddresses: placeResponse.SecondaryAddresses,
     });
 
     setIsAutofill(false);

@@ -62,7 +62,7 @@ export function MapMarker({
           latitude={markerPosition[1]}
           anchor="bottom"
           color={colorScheme === "Light" ? "#000" : "#ddd"}
-          ref={markerRef}
+          ref={markerRef as any}
         />
       </>
     );

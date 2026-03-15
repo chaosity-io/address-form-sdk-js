@@ -1,10 +1,11 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { ComponentProps, useState } from "react";
 import { Locate } from "../../icons/Locate.tsx";
-import { reverseGeocodeQuery } from "../../utils/queries.ts";
+import { getPlaceQuery, suggestQuery } from "../../utils/queries.ts";
 import { TypeaheadOutput } from "../Typeahead/index.tsx";
 import { styleButton } from "./styles.css.ts";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context.ts";
+import { countries } from "../../data/countries.ts";
 
 interface LocateButtonProps extends ComponentProps<"button"> {
   onLocate: (address: TypeaheadOutput) => void;
@@ -27,24 +28,37 @@ export function LocateButton({ onLocate, className = "", ...restProps }: LocateB
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
-        const result = await queryClient.ensureQueryData(
-          reverseGeocodeQuery(client, {
-            QueryPosition: [position.coords.longitude, position.coords.latitude],
+        const { longitude, latitude } = position.coords;
+
+        // Use suggest with bias position to find the nearest address
+        const suggestResult = await queryClient.ensureQueryData(
+          suggestQuery(client, {
+            QueryText: `${latitude},${longitude}`,
+            BiasPosition: [longitude, latitude],
+            MaxResults: 1,
           }),
         );
 
-        if (result.ResultItems && result.ResultItems.length > 0) {
-          const addressNumber = result.ResultItems[0].Address?.AddressNumber;
-          const street = result.ResultItems[0].Address?.Street;
-          const formattedAddressLineOne = addressNumber && street ? `${addressNumber} ${street}` : "";
+        const placeId = suggestResult.ResultItems?.[0]?.Place?.PlaceId;
+        if (!placeId) return;
 
-          onLocate({
-            placeId: result.ResultItems[0].PlaceId,
-            addressLineOneField: formattedAddressLineOne,
-            fullAddress: result.ResultItems[0].Address,
-            position: result.ResultItems[0].Position as [number, number],
-          });
-        }
+        // Get full place details
+        const placeResult = await queryClient.ensureQueryData(
+          getPlaceQuery(client, { PlaceId: placeId }),
+        );
+
+        const matchedCountry = countries.find((c) => c.code === placeResult.Address?.Country?.Code2);
+        const addressLineOneFallback = placeResult.Address?.Label || "";
+        const addressLineOneField = matchedCountry?.supported
+          ? [placeResult.Address?.AddressNumber, placeResult.Address?.Street].filter(Boolean).join(" ") || addressLineOneFallback
+          : addressLineOneFallback;
+
+        onLocate({
+          placeId: placeResult.PlaceId,
+          addressLineOneField,
+          fullAddress: placeResult.Address,
+          position: placeResult.Position as [number, number],
+        });
       },
       (err) => {
         console.error(`Error getting location: ${err.message}`);

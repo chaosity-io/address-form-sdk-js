@@ -1,10 +1,12 @@
-import { AutocompleteCommandOutput, GeoPlacesClient, SuggestCommandOutput } from "@aws-sdk/client-geo-places";
+import { AutocompleteCommandOutput, SuggestCommandOutput } from "@chaosity/location-client";
 import { renderHook, waitFor } from "@testing-library/react";
 import { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { GeoPlacesClient } from "@chaosity/location-client";
+import { LocationClientProvider } from "@chaosity/location-client-react";
+import { QueryClientProvider } from "@tanstack/react-query";
 import * as api from "../../utils/api";
 import { queryClient } from "../../utils/query-client";
-import { AmazonLocationProvider } from "../AmazonLocationProvider";
 import { TypeaheadAPIName, useTypeaheadQuery } from "./use-typeahead-query";
 
 // Mock the API functions
@@ -13,12 +15,22 @@ vi.mock("../../utils/api", () => ({
   suggest: vi.fn(),
 }));
 
-// Create a wrapper component for testing hooks that need the AmazonLocationProvider
-const createWrapper = (client?: GeoPlacesClient) => {
+// Regular function so vi.clearAllMocks() cannot clear its implementation
+const mockGetConfig = () =>
+  Promise.resolve({
+    apiUrl: "https://test-api.chaosity.cloud",
+    token: "test-token",
+    expiresAt: Date.now() + 900_000,
+  });
+
+// Create a wrapper component for testing hooks that need the providers
+const createWrapper = (_client?: GeoPlacesClient) => {
   return ({ children }: { children: ReactNode }) => (
-    <AmazonLocationProvider apiKey="test-api-key" region="us-east-1" client={client || new GeoPlacesClient()}>
-      {children}
-    </AmazonLocationProvider>
+    <QueryClientProvider client={queryClient}>
+      <LocationClientProvider getConfig={mockGetConfig}>
+        {children}
+      </LocationClientProvider>
+    </QueryClientProvider>
   );
 };
 
@@ -28,7 +40,7 @@ describe("useTypeaheadQuery", () => {
   beforeEach(() => {
     queryClient.clear();
     vi.clearAllMocks();
-    mockClient = new GeoPlacesClient();
+    mockClient = new GeoPlacesClient({ apiUrl: "https://test-api.chaosity.cloud", token: "test-token" });
   });
 
   describe("autocomplete api", () => {

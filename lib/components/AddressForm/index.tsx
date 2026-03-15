@@ -1,4 +1,4 @@
-import type { AutocompleteFilterPlaceType, Address } from "@aws-sdk/client-geo-places";
+import type { AutocompleteFilterPlaceType, Address } from "@chaosity/location-client";
 import clsx from "clsx";
 import { ComponentProps, FormEventHandler, useState } from "react";
 import type { Config } from "../../types/config.ts";

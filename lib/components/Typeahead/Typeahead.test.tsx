@@ -1,4 +1,4 @@
-import { GetPlaceCommandOutput } from "@aws-sdk/client-geo-places";
+import { GetPlaceCommandOutput } from "@chaosity/location-client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -11,7 +11,6 @@ vi.mock("../../utils/api", () => ({
   getPlace: vi.fn(),
   autocomplete: vi.fn(),
   suggest: vi.fn(),
-  reverseGeocode: vi.fn(),
 }));
 
 vi.mock("../../utils/debounce", () => ({
@@ -190,6 +189,7 @@ describe("Typeahead Component", () => {
           PlaceId: "place-1",
           Language: undefined,
           PoliticalView: undefined,
+          AdditionalFeatures: ["SecondaryAddresses"],
         },
       );
       expect(mockOnSelect).toHaveBeenCalledWith({
@@ -516,16 +516,25 @@ describe("Typeahead Component", () => {
       configurable: true,
     });
 
-    vi.mocked(api.reverseGeocode).mockResolvedValue({
+    vi.mocked(api.suggest).mockResolvedValue({
       ResultItems: [
         {
-          PlaceId: "current-location-place",
+          SuggestResultItemType: "Place",
           Title: "Current Location Address",
-          Address: { Label: "Current Location Address" },
-          PlaceType: "Street",
+          Place: { PlaceId: "current-location-place" },
         },
       ],
       PricingBucket: "bucket1",
+      $metadata: {},
+    });
+
+    vi.mocked(api.getPlace).mockResolvedValue({
+      PlaceId: "current-location-place",
+      PlaceType: "Street",
+      Title: "Current Location Address",
+      PricingBucket: "bucket1",
+      Address: { Label: "Current Location Address", Country: { Code2: "US", Name: "United States" } },
+      Position: [-122.3321, 47.6062],
       $metadata: {},
     });
 

@@ -2,8 +2,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Meta, StoryObj } from "@storybook/react";
 import { action } from "@storybook/addon-actions";
+import { LocationClientProvider } from "@chaosity/location-client-react";
 import { AddressForm } from "../../lib/components/AddressFormReact/AddressForm";
 import { Flex } from "../../lib/components/Flex";
+
+const getConfig = async () => ({
+  apiUrl: import.meta.env.STORYBOOK_API_URL || "https://api.chaosity.cloud",
+  token: import.meta.env.STORYBOOK_TOKEN || "demo-token",
+  expiresAt: Date.now() + 900_000,
+});
 
 const meta = {
   title: "Component/AddressForm",
@@ -15,8 +22,6 @@ const meta = {
       const data = await getData({ intendedUse: "SingleUse" });
       action("onSubmit")(data);
     },
-    apiKey: "AMAZON_LOCATION_API_KEY",
-    region: import.meta.env.STORYBOOK_SDK_REGION,
     language: undefined,
     politicalView: undefined,
     showCurrentCountryResultsOnly: false,
@@ -54,20 +59,6 @@ const meta = {
     countryClassName: undefined,
   } as any,
   argTypes: {
-    apiKey: {
-      type: "string",
-      description: "The Amazon Location Service API key used to authenticate requests",
-      table: {
-        category: "AddressForm",
-      },
-    },
-    region: {
-      type: "string",
-      description: "The AWS region where Amazon Location Service is called (e.g., 'us-east-1')",
-      table: {
-        category: "AddressForm",
-      },
-    },
     onSubmit: {
       type: "function",
       description:
@@ -347,9 +338,8 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: (args: any) => {
     return (
+      <LocationClientProvider getConfig={getConfig}>
       <AddressForm
-        apiKey={args.apiKey === "AMAZON_LOCATION_API_KEY" ? import.meta.env.STORYBOOK_SDK_API_KEY : args.apiKey}
-        region={args.region}
         onSubmit={args.onSubmit}
         language={args.language}
         politicalView={args.politicalView}
@@ -419,6 +409,7 @@ export const Default: Story = {
           />
         </Flex>
       </AddressForm>
+      </LocationClientProvider>
     );
   },
 };

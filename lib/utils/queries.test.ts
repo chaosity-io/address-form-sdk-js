@@ -1,13 +1,12 @@
 import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "./api";
-import { autocompleteQuery, getPlaceQuery, reverseGeocodeQuery, suggestQuery } from "./queries";
-import { GeoPlacesClient } from "@aws-sdk/client-geo-places";
+import { autocompleteQuery, getPlaceQuery, suggestQuery } from "./queries";
+import { GeoPlacesClient } from "@chaosity/location-client";
 
 vi.mock("./api", () => ({
   autocomplete: vi.fn(() => []),
   suggest: vi.fn(() => []),
-  reverseGeocode: vi.fn(() => []),
   getPlace: vi.fn(() => []),
 }));
 
@@ -16,7 +15,7 @@ let geoPlacesClient: GeoPlacesClient;
 
 beforeEach(() => {
   client = new QueryClient();
-  geoPlacesClient = new GeoPlacesClient();
+  geoPlacesClient = new GeoPlacesClient({ apiUrl: "https://test-api.chaosity.cloud", token: "test-token" });
   vi.clearAllMocks();
 });
 
@@ -75,35 +74,6 @@ describe("suggestQuery", () => {
     client.ensureQueryData(suggestQuery(geoPlacesClient, { QueryText: "bar" }));
 
     expect(api.suggest).toBeCalledTimes(2);
-  });
-});
-
-describe("reverseGeocodeQuery", () => {
-  it("should call reverse geocode api", () => {
-    const input = { QueryPosition: [-123.11694, 49.28126] };
-    const query = reverseGeocodeQuery(geoPlacesClient, input);
-
-    client.ensureQueryData(query);
-
-    expect(query.queryKey).toEqual(["reverseGeocode", input]);
-    expect(api.reverseGeocode).toBeCalledWith(geoPlacesClient, input);
-  });
-
-  it("should use cached results in the second call", () => {
-    const input = { QueryPosition: [-123.11694, 49.28126] };
-
-    const firstCallResults = client.ensureQueryData(reverseGeocodeQuery(geoPlacesClient, input));
-    const secondCallResults = client.ensureQueryData(reverseGeocodeQuery(geoPlacesClient, input));
-
-    expect(firstCallResults).toEqual(secondCallResults);
-    expect(api.reverseGeocode).toBeCalledTimes(1);
-  });
-
-  it("should not use cached results in the second call for different input", () => {
-    client.ensureQueryData(reverseGeocodeQuery(geoPlacesClient, { QueryPosition: [-123, 49] }));
-    client.ensureQueryData(reverseGeocodeQuery(geoPlacesClient, { QueryPosition: [-120, 49] }));
-
-    expect(api.reverseGeocode).toBeCalledTimes(2);
   });
 });
 

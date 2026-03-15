@@ -4,7 +4,7 @@ import { describe, expect, it, vi, beforeEach } from "vitest";
 import { renderWithProvider } from "../../test/utils";
 import { AddressForm } from "./AddressForm";
 import { AddressFormContext, AddressFormContextType, useAddressFormContext } from "./AddressFormContext";
-import { GeoPlacesClient, GetPlaceIntendedUse } from "@aws-sdk/client-geo-places";
+import { GeoPlacesClient, GetPlaceIntendedUse } from "@chaosity/location-client";
 import * as api from "../../utils/api";
 import { useNotificationStore } from "../../stores/notificationStore";
 
@@ -14,8 +14,6 @@ vi.mock("../../utils/api", async (importOriginal) => {
 });
 
 const mockContextValue: AddressFormContextType = {
-  apiKey: "test-key",
-  region: "us-east-1",
   data: {},
   setData: vi.fn(),
   setMapViewState: vi.fn(),
@@ -36,7 +34,7 @@ describe("AddressForm", () => {
 
   it("renders form element", () => {
     renderWithContext(
-      <AddressForm apiKey="test" region="us-east-1">
+      <AddressForm>
         <div />
       </AddressForm>,
     );
@@ -45,7 +43,7 @@ describe("AddressForm", () => {
 
   it("applies custom className", () => {
     renderWithContext(
-      <AddressForm apiKey="test" region="us-east-1" className="custom">
+      <AddressForm className="custom">
         <div />
       </AddressForm>,
     );
@@ -54,7 +52,7 @@ describe("AddressForm", () => {
 
   it("renders child components", () => {
     renderWithContext(
-      <AddressForm apiKey="test" region="us-east-1">
+      <AddressForm>
         <input data-type="address-form" name="city" />
         <button data-type="address-form" type="submit" />
       </AddressForm>,
@@ -66,20 +64,20 @@ describe("AddressForm", () => {
   it("provides context value", () => {
     const TestComponent = () => {
       const context = useContext(AddressFormContext);
-      return <div data-testid="context">{context?.apiKey}</div>;
+      return <div data-testid="context">{context ? "has-context" : "no-context"}</div>;
     };
 
     renderWithContext(
-      <AddressForm apiKey="test-key" region="us-west-2">
+      <AddressForm>
         <TestComponent />
       </AddressForm>,
     );
-    expect(document.querySelector('[data-testid="context"]')).toHaveTextContent("test-key");
+    expect(document.querySelector('[data-testid="context"]')).toHaveTextContent("has-context");
   });
 
   it("resets form data when Reset button is clicked", () => {
     const { getByLabelText, getByRole } = renderWithProvider(
-      <AddressForm apiKey="test" region="us-east-1">
+      <AddressForm>
         <input data-type="address-form" name="addressLineTwo" />
         <input data-type="address-form" name="city" />
         <input data-type="address-form" name="province" />
@@ -137,10 +135,13 @@ describe("AddressForm", () => {
     };
 
     const { getByRole } = renderWithProvider(
-      <AddressForm apiKey="test" region="us-east-1" onSubmit={mockOnSubmit}>
+      <AddressForm onSubmit={mockOnSubmit}>
         <TestForm />
       </AddressForm>,
     );
+
+    // Wait for LocationClientProvider async init so client is available
+    await act(async () => {});
 
     fireEvent.click(getByRole("button", { name: "Submit" }));
 
@@ -178,7 +179,7 @@ describe("AddressForm", () => {
     };
 
     const { getByRole } = renderWithProvider(
-      <AddressForm apiKey="test" region="us-east-1" onSubmit={mockOnSubmit}>
+      <AddressForm onSubmit={mockOnSubmit}>
         <TestForm />
       </AddressForm>,
     );
@@ -198,7 +199,7 @@ describe("AddressForm", () => {
 
   it("displays notification message when added to store", async () => {
     renderWithProvider(
-      <AddressForm apiKey="test" region="us-east-1">
+      <AddressForm>
         <div />
       </AddressForm>,
     );

@@ -1,4 +1,4 @@
-import { Address, AutocompleteFilterPlaceType, type GetPlaceIntendedUse } from "@aws-sdk/client-geo-places";
+import { Address, AutocompleteFilterPlaceType, type GetPlaceIntendedUse, type RelatedPlace } from "@chaosity/location-client";
 import clsx from "clsx";
 import { ComponentProps, FormEventHandler, FunctionComponent, ReactNode, useEffect, useRef, useState } from "react";
 import { AddressFormAddressField, AddressFormAddressFieldProps } from "./AddressFormAddressField";
@@ -25,11 +25,10 @@ export interface AddressFormData {
   originalPosition?: string;
   adjustedPosition?: string;
   addressDetails?: Address;
+  secondaryAddresses?: RelatedPlace[];
 }
 
 export interface AddressFormProps extends AddressFormContentProps {
-  apiKey: string;
-  region: string;
   language?: string;
   politicalView?: string;
   showCurrentCountryResultsOnly?: boolean;
@@ -47,8 +46,6 @@ interface ChildComponents {
 }
 
 export const AddressForm: FunctionComponent<AddressFormProps> & ChildComponents = ({
-  apiKey,
-  region,
   children,
   language,
   politicalView,
@@ -61,8 +58,6 @@ export const AddressForm: FunctionComponent<AddressFormProps> & ChildComponents 
 }) => {
   return (
     <AddressFormProvider
-      apiKey={apiKey}
-      region={region}
       language={language}
       politicalView={politicalView}
       showCurrentCountryResultsOnly={showCurrentCountryResultsOnly}

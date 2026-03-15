@@ -30,8 +30,8 @@ export default defineConfig({
       plugins: [visualizer()],
 
       external: [
-        "@aws-sdk/client-geo-places",
-        "@aws/amazon-location-utilities-auth-helper",
+        "@chaosity/location-client",
+        "@chaosity/location-client-react",
         "@headlessui/react",
         "@vanilla-extract/css",
         "react",

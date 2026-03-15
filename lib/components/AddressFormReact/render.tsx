@@ -1,9 +1,10 @@
-import { AutocompleteFilterPlaceType } from "@aws-sdk/client-geo-places";
+import { AutocompleteFilterPlaceType } from "@chaosity/location-client";
 import { FunctionComponent, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { LocationClientProvider } from "@chaosity/location-client-react";
+import { ClientConfig } from "@chaosity/location-client";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
 import { getPlace } from "../../utils/api";
-import { AmazonLocationProvider } from "../AmazonLocationProvider";
 import { Button } from "../Button";
 import { ComponentInjector } from "../ComponentInjector";
 import { ColorScheme, MapStyle, MapStyleType } from "../Map";
@@ -22,8 +23,7 @@ import { createPortal } from "react-dom";
 
 export interface RenderParams {
   root: string;
-  apiKey: string;
-  region: string;
+  getConfig: () => Promise<ClientConfig & { expiresAt?: number }>;
   language?: string;
   politicalView?: string;
   showCurrentCountryResultsOnly?: boolean;
@@ -54,10 +54,8 @@ export const render = ({ root: selector, ...formProps }: RenderParams) => {
   const root = createRoot(ensureAddressFormRoot());
 
   root.render(
-    <AmazonLocationProvider apiKey={formProps.apiKey} region={formProps.region}>
+    <LocationClientProvider getConfig={formProps.getConfig}>
       <AddressFormProvider
-        apiKey={formProps.apiKey}
-        region={formProps.region}
         language={formProps.language}
         politicalView={formProps.politicalView}
         showCurrentCountryResultsOnly={formProps.showCurrentCountryResultsOnly}
@@ -169,7 +167,7 @@ export const render = ({ root: selector, ...formProps }: RenderParams) => {
           ]}
         />
       </AddressFormProvider>
-    </AmazonLocationProvider>,
+    </LocationClientProvider>,
   );
 };
 

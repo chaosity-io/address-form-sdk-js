@@ -18,8 +18,6 @@ describe("AddressFormContext", () => {
 
   it("provides context value when wrapped", () => {
     const mockValue: AddressFormContextType = {
-      apiKey: "test-key",
-      region: "us-east-1",
       data: { city: "Seattle" },
       setData: vi.fn(),
       setMapViewState: vi.fn(),

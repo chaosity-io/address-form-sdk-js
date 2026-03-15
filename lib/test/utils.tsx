@@ -1,21 +1,28 @@
 import { render, RenderOptions } from "@testing-library/react";
 import { ReactNode } from "react";
-import { AmazonLocationProvider } from "../components/AmazonLocationProvider";
-import { vi } from "vitest";
-import { GeoPlacesClient } from "@aws-sdk/client-geo-places";
+import { LocationClientProvider } from "@chaosity/location-client-react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-vi.mock("../../utils/api", () => ({
-  initializeAwsSdkClient: vi.fn(),
-}));
-
-const client = new GeoPlacesClient();
+// Regular function (not vi.fn) so vi.clearAllMocks() cannot clear its implementation
+const mockGetConfig = () =>
+  Promise.resolve({
+    apiUrl: "https://test-api.chaosity.cloud",
+    token: "test-token",
+    expiresAt: Date.now() + 900_000,
+  });
 
 export function renderWithProvider(ui: ReactNode, options?: Omit<RenderOptions, "wrapper">) {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+
   return render(ui, {
     wrapper: ({ children }) => (
-      <AmazonLocationProvider apiKey="test-api-key" region="us-east-1" client={client}>
-        {children}
-      </AmazonLocationProvider>
+      <QueryClientProvider client={queryClient}>
+        <LocationClientProvider getConfig={mockGetConfig}>
+          {children}
+        </LocationClientProvider>
+      </QueryClientProvider>
     ),
     ...options,
   });

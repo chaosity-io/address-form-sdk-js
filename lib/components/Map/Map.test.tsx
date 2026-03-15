@@ -24,11 +24,10 @@ vi.mock("./styles.css.ts", () => ({
 
 describe("Map Component", () => {
   it("renders the MaplibreMap component with correct props", () => {
-    renderWithProvider(<Map mapStyle={["Standard", "Light"]} />);
+    renderWithProvider(<Map mapStyle={["Standard", "Light"]} apiUrl="https://test-api.chaosity.cloud" />);
     const mapComponent = screen.getByTestId("mock-maplibre-map");
     expect(mapComponent).toBeInTheDocument();
-    const expectedMapStyle =
-      "https://maps.geo.us-east-1.amazonaws.com/v2/styles/Standard/descriptor?key=test-api-key&color-scheme=Light";
+    const expectedMapStyle = "https://test-api.chaosity.cloud/maps/Standard/descriptor?color-scheme=Light";
     expect(mapComponent).toHaveAttribute("data-mapstyle", expectedMapStyle);
   });
 
@@ -72,17 +71,16 @@ describe("Map Component", () => {
   });
 
   it("includes politicalView in the mapStyle URL when provided", () => {
-    renderWithProvider(<Map mapStyle={["Standard", "Light"]} politicalView="IN" />);
+    renderWithProvider(<Map mapStyle={["Standard", "Light"]} politicalView="IN" apiUrl="https://test-api.chaosity.cloud" />);
     const mapComponent = screen.getByTestId("mock-maplibre-map");
-    const expectedMapStyle =
-      "https://maps.geo.us-east-1.amazonaws.com/v2/styles/Standard/descriptor?key=test-api-key&color-scheme=Light&political-view=IN";
+    const expectedMapStyle = "https://test-api.chaosity.cloud/maps/Standard/descriptor?color-scheme=Light&political-view=IN";
     expect(mapComponent).toHaveAttribute("data-mapstyle", expectedMapStyle);
   });
 
   it("does not include colorScheme in the mapStyle URL for Satellite style", () => {
-    renderWithProvider(<Map mapStyle={["Satellite", "Light"]} />);
+    renderWithProvider(<Map mapStyle={["Satellite", "Light"]} apiUrl="https://test-api.chaosity.cloud" />);
     const mapComponent = screen.getByTestId("mock-maplibre-map");
-    const expectedMapStyle = "https://maps.geo.us-east-1.amazonaws.com/v2/styles/Satellite/descriptor?key=test-api-key";
+    const expectedMapStyle = "https://test-api.chaosity.cloud/maps/Satellite/descriptor";
     expect(mapComponent).toHaveAttribute("data-mapstyle", expectedMapStyle);
   });
 

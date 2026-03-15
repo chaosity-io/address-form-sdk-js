@@ -1,7 +1,7 @@
 {
-  "name": "@aws/address-form-sdk-js",
-  "description": "Address Form SDK for Javascript",
-  "version": "1.2.1",
+  "name": "@chaosity/address-form",
+  "description": "Address Form SDK for Chaosity Location Service",
+  "version": "0.2.0",
   "main": "./dist/lib/address-form-sdk.cjs.js",
   "types": "dist/lib/main.d.ts",
   "files": [
@@ -12,7 +12,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/aws-geospatial/address-form-sdk-js"
+    "url": "https://github.com/chaosity-io/address-form-sdk-js"
   },
   "scripts": {
     "dev": "vite",
@@ -29,6 +29,8 @@
     "prepare": "vite build"
   },
   "devDependencies": {
+    "@chaosity/location-client": "file:../location-service-client",
+    "@chaosity/location-client-react": "file:../location-service-client-react",
     "@eslint/js": "^9.22.0",
     "@storybook/addon-essentials": "^8.6.12",
     "@storybook/addon-interactions": "^8.6.12",
@@ -67,8 +69,6 @@
     "vitest": "^3.1.0"
   },
   "dependencies": {
-    "@aws-sdk/client-geo-places": "^3.799.0",
-    "@aws/amazon-location-utilities-auth-helper": "^1.2.1",
     "@headlessui/react": "^2.2.2",
     "@tanstack/react-query": "^5.81.5",
     "@vanilla-extract/css": "^1.17.1",
@@ -79,6 +79,8 @@
     "zustand": "^5.0.8"
   },
   "peerDependencies": {
+    "@chaosity/location-client": ">=0.1.0",
+    "@chaosity/location-client-react": ">=0.1.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },

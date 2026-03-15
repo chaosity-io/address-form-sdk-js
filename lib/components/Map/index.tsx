@@ -1,8 +1,11 @@
 import MapLibreMap, { MapProps as MapLibreMapProps, NavigationControl } from "react-map-gl/maplibre";
-import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
+import { useLocationClient } from "@chaosity/location-client-react";
+import { buildMapStyleUrl, createTransformRequest } from "@chaosity/location-client";
+import { useMemo } from "react";
 import { Logo } from "../../icons/Logo";
 import { logo } from "./styles.css";
 import { getColorScheme, getMapStyleType } from "./utils";
+
 
 export type ColorScheme = "Light" | "Dark";
 
@@ -17,22 +20,31 @@ export { type ExtendedMapStyle as MapStyle };
 
 export interface MapProps extends Omit<MapLibreMapProps, "mapStyle"> {
   mapStyle: ExtendedMapStyle;
+  apiUrl?: string;
   politicalView?: string;
   showNavigationControl?: boolean;
 }
 
 export function Map({
   mapStyle: extendedMapStyle = ["Standard", "Light"],
+  apiUrl: apiUrlProp,
   politicalView,
   showNavigationControl = true,
   children,
   ...rest
 }: MapProps) {
-  const { apiKey, region } = useAmazonLocationContext();
+  const { getToken } = useLocationClient();
+  const apiUrl = apiUrlProp;
+
+  const mapTransformRequest = useMemo(() => {
+    if (!apiUrl) return undefined;
+    return createTransformRequest(apiUrl, getToken);
+  }, [apiUrl, getToken]);
 
   return (
     <MapLibreMap
-      mapStyle={getMapStyle(extendedMapStyle, region, apiKey, politicalView)}
+      mapStyle={getMapStyle(extendedMapStyle, apiUrl, politicalView)}
+      transformRequest={mapTransformRequest as MapLibreMapProps["transformRequest"]}
       validateStyle={false}
       style={{ width: "100%", height: "100%", borderRadius: 4 }}
       {...rest}
@@ -50,23 +62,21 @@ export function Map({
 
 const getMapStyle = (
   extendedMapStyle: ExtendedMapStyle,
-  region: string,
-  apiKey: string,
+  apiUrl?: string,
   politicalView?: string,
 ): MapLibreMapProps["mapStyle"] => {
   if (Array.isArray(extendedMapStyle)) {
     const [mapStyle, colorScheme = "Light"] = extendedMapStyle;
-    let mapStyleDescriptor = `https://maps.geo.${region}.amazonaws.com/v2/styles/${mapStyle}/descriptor?key=${apiKey}`;
 
-    if (colorScheme && (mapStyle === "Standard" || mapStyle === "Monochrome")) {
-      mapStyleDescriptor += `&color-scheme=${colorScheme}`;
+    if (apiUrl) {
+      const supportsColorScheme = mapStyle === "Standard" || mapStyle === "Monochrome";
+      return buildMapStyleUrl(apiUrl, mapStyle, {
+        colorScheme: supportsColorScheme ? (colorScheme as ColorScheme) : undefined,
+        politicalView,
+      });
     }
 
-    if (politicalView) {
-      mapStyleDescriptor += `&political-view=${politicalView}`;
-    }
-
-    return mapStyleDescriptor;
+    return mapStyle;
   }
 
   return extendedMapStyle;
