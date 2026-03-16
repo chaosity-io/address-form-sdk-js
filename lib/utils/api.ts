@@ -48,7 +48,6 @@ export const getPlace = async (
   }
 };
 
-
 const handleApiError = (error: unknown, id: string, description: string) => {
   const { addNotification } = useNotificationStore.getState();
   const verb = description.endsWith("s") ? "are" : "is";

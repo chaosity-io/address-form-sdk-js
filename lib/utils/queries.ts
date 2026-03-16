@@ -1,8 +1,4 @@
-import {
-  AutocompleteCommandInput,
-  GetPlaceCommandInput,
-  SuggestCommandInput,
-} from "@chaosity/location-client";
+import { AutocompleteCommandInput, GetPlaceCommandInput, SuggestCommandInput } from "@chaosity/location-client";
 import { GeoPlacesClient } from "@chaosity/location-client";
 import { autocomplete, getPlace, suggest } from "./api";
 

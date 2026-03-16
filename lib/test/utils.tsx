@@ -19,9 +19,7 @@ export function renderWithProvider(ui: ReactNode, options?: Omit<RenderOptions, 
   return render(ui, {
     wrapper: ({ children }) => (
       <QueryClientProvider client={queryClient}>
-        <LocationClientProvider getConfig={mockGetConfig}>
-          {children}
-        </LocationClientProvider>
+        <LocationClientProvider getConfig={mockGetConfig}>{children}</LocationClientProvider>
       </QueryClientProvider>
     ),
     ...options,

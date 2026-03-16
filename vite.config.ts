@@ -54,8 +54,8 @@ export default defineConfig({
 
     coverage: {
       include: ["lib/**"],
-      reportsDirectory: path.join(__dirname, "build", "brazil-documentation", "coverage"),
-      reporter: ["text", "cobertura"],
+      reportsDirectory: path.join(__dirname, "coverage"),
+      reporter: ["text", "json-summary"],
     },
   },
 });

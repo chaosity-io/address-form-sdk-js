@@ -339,76 +339,76 @@ export const Default: Story = {
   render: (args: any) => {
     return (
       <LocationClientProvider getConfig={getConfig}>
-      <AddressForm
-        onSubmit={args.onSubmit}
-        language={args.language}
-        politicalView={args.politicalView}
-        showCurrentCountryResultsOnly={args.showCurrentCountryResultsOnly}
-        allowedCountries={args.allowedCountries}
-        placeTypes={args.placeTypes}
-      >
-        <Flex direction="row" flex>
-          <Flex direction="column">
-            <input
-              data-type="address-form"
-              name="addressLineOne"
-              aria-label={args.addressLineOneLabel}
-              placeholder={args.addressLineOnePlaceholder}
-              data-api-name={args.addressLineOneApiName}
-              data-show-current-location={args.addressLineOneShowCurrentLocation}
-              className={args.addressLineOneClassName}
-            />
-            <input
-              data-type="address-form"
-              name="addressLineTwo"
-              aria-label={args.addressLineTwoLabel}
-              placeholder={args.addressLineTwoPlaceholder}
-              className={args.addressLineTwoClassName}
-            />
-            <input
-              data-type="address-form"
-              name="city"
-              aria-label={args.cityLabel}
-              placeholder={args.cityPlaceholder}
-              className={args.cityClassName}
-            />
-            <input
-              data-type="address-form"
-              name="province"
-              aria-label={args.provinceLabel}
-              placeholder={args.provincePlaceholder}
-              className={args.provinceClassName}
-            />
-            <input
-              data-type="address-form"
-              name="postalCode"
-              aria-label={args.postalCodeLabel}
-              placeholder={args.postalCodePlaceholder}
-              className={args.postalCodeClassName}
-            />
-            <input
-              data-type="address-form"
-              name="country"
-              aria-label={args.countryLabel}
-              placeholder={args.countryPlaceholder}
-              className={args.countryClassName}
-            />
-            <Flex direction="row">
-              <button data-type="address-form" type="submit">
-                Submit
-              </button>
-              <button data-type="address-form" type="reset">
-                Reset
-              </button>
+        <AddressForm
+          onSubmit={args.onSubmit}
+          language={args.language}
+          politicalView={args.politicalView}
+          showCurrentCountryResultsOnly={args.showCurrentCountryResultsOnly}
+          allowedCountries={args.allowedCountries}
+          placeTypes={args.placeTypes}
+        >
+          <Flex direction="row" flex>
+            <Flex direction="column">
+              <input
+                data-type="address-form"
+                name="addressLineOne"
+                aria-label={args.addressLineOneLabel}
+                placeholder={args.addressLineOnePlaceholder}
+                data-api-name={args.addressLineOneApiName}
+                data-show-current-location={args.addressLineOneShowCurrentLocation}
+                className={args.addressLineOneClassName}
+              />
+              <input
+                data-type="address-form"
+                name="addressLineTwo"
+                aria-label={args.addressLineTwoLabel}
+                placeholder={args.addressLineTwoPlaceholder}
+                className={args.addressLineTwoClassName}
+              />
+              <input
+                data-type="address-form"
+                name="city"
+                aria-label={args.cityLabel}
+                placeholder={args.cityPlaceholder}
+                className={args.cityClassName}
+              />
+              <input
+                data-type="address-form"
+                name="province"
+                aria-label={args.provinceLabel}
+                placeholder={args.provincePlaceholder}
+                className={args.provinceClassName}
+              />
+              <input
+                data-type="address-form"
+                name="postalCode"
+                aria-label={args.postalCodeLabel}
+                placeholder={args.postalCodePlaceholder}
+                className={args.postalCodeClassName}
+              />
+              <input
+                data-type="address-form"
+                name="country"
+                aria-label={args.countryLabel}
+                placeholder={args.countryPlaceholder}
+                className={args.countryClassName}
+              />
+              <Flex direction="row">
+                <button data-type="address-form" type="submit">
+                  Submit
+                </button>
+                <button data-type="address-form" type="reset">
+                  Reset
+                </button>
+              </Flex>
             </Flex>
+            <AddressForm.Map
+              mapStyle={args.mapMapStyle}
+              showNavigationControl={args.mapShowNavigationControl}
+              adjustablePosition={args.mapAdjustablePosition}
+            />
           </Flex>
-          <AddressForm.Map
-            mapStyle={args.mapMapStyle}
-            showNavigationControl={args.mapShowNavigationControl}
-            adjustablePosition={args.mapAdjustablePosition}
-          />
-        </Flex>
-      </AddressForm>
+        </AddressForm>
       </LocationClientProvider>
     );
   },

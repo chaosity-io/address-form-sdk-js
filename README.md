@@ -62,20 +62,19 @@ export default function App() {
       >
         <Flex direction="row" flex>
           <Flex direction="column">
-            <input
-              data-type="address-form"
-              name="addressLineOne"
-              data-api-name="suggest"
-              placeholder="Enter address"
-            />
+            <input data-type="address-form" name="addressLineOne" data-api-name="suggest" placeholder="Enter address" />
             <input data-type="address-form" name="addressLineTwo" />
             <input data-type="address-form" name="city" placeholder="City" />
             <input data-type="address-form" name="province" placeholder="State/Province" />
             <input data-type="address-form" name="postalCode" />
             <input data-type="address-form" name="country" placeholder="Country" />
             <Flex direction="row">
-              <button data-type="address-form" type="submit">Submit</button>
-              <button data-type="address-form" type="reset">Reset</button>
+              <button data-type="address-form" type="submit">
+                Submit
+              </button>
+              <button data-type="address-form" type="reset">
+                Reset
+              </button>
             </Flex>
           </Flex>
           <AddressForm.Map mapStyle={["Standard", "Light"]} />
@@ -102,7 +101,12 @@ export default function App() {
   <body>
     <form id="address-form" class="aws-address-form aws-flex-row aws-flex-1">
       <div class="aws-flex-column">
-        <input data-type="address-form" name="addressLineOne" data-api-name="suggest" data-show-current-location="true" />
+        <input
+          data-type="address-form"
+          name="addressLineOne"
+          data-api-name="suggest"
+          data-show-current-location="true"
+        />
         <input data-type="address-form" name="addressLineTwo" />
         <input data-type="address-form" name="city" />
         <input data-type="address-form" name="province" />
@@ -149,16 +153,16 @@ Main component wrapping the address form.
 
 #### Props
 
-| Property                        | Type                            | Required | Default | Description                                                                                          |
-| ------------------------------- | ------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------- |
+| Property                        | Type                            | Required | Default | Description                                                                                                       |
+| ------------------------------- | ------------------------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
 | `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag) for localized suggestions (e.g., `"en"`, `"es"`) |
-| `politicalView`                 | `string`                        | No       | -       | Political view for disputed territory display                                                        |
-| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limit suggestions to the selected country                                                            |
-| `allowedCountries`              | `string[]`                      | No       | -       | ISO alpha-2 or alpha-3 country codes to restrict suggestions                                         |
-| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Filter results by place type (e.g., `"Locality"`, `"PostalCode"`)                                    |
-| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as `[longitude, latitude]`                                                        |
-| `initialMapZoom`                | `number`                        | No       | Varies  | Initial zoom level (default: 10 with center, 5 with single country, 1 otherwise)                     |
-| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback receiving an async `getData` function to retrieve form data with `intendedUse` parameter    |
+| `politicalView`                 | `string`                        | No       | -       | Political view for disputed territory display                                                                     |
+| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limit suggestions to the selected country                                                                         |
+| `allowedCountries`              | `string[]`                      | No       | -       | ISO alpha-2 or alpha-3 country codes to restrict suggestions                                                      |
+| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Filter results by place type (e.g., `"Locality"`, `"PostalCode"`)                                                 |
+| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as `[longitude, latitude]`                                                                     |
+| `initialMapZoom`                | `number`                        | No       | Varies  | Initial zoom level (default: 10 with center, 5 with single country, 1 otherwise)                                  |
+| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback receiving an async `getData` function to retrieve form data with `intendedUse` parameter                 |
 
 #### Form Submission Data
 
@@ -172,18 +176,18 @@ onSubmit: async (getData) => {
 
 Use `"Storage"` if you plan to store or cache the results.
 
-| Property           | Type      | Description                                                          |
-| ------------------ | --------- | -------------------------------------------------------------------- |
+| Property           | Type      | Description                                                              |
+| ------------------ | --------- | ------------------------------------------------------------------------ |
 | `placeId`          | `string`  | Place ID (present when address selected from typeahead or locate button) |
-| `addressLineOne`   | `string`  | Primary address line (street address)                                |
-| `addressLineTwo`   | `string`  | Secondary address line (apartment, suite, etc.)                      |
-| `city`             | `string`  | City name                                                            |
-| `province`         | `string`  | State or province                                                    |
-| `postalCode`       | `string`  | Postal or ZIP code                                                   |
-| `country`          | `string`  | Country code (ISO 3166-1 alpha-2)                                    |
-| `originalPosition` | `string`  | Original coordinates from API (`longitude,latitude`)                 |
-| `adjustedPosition` | `string`  | User-adjusted coordinates if map pin was moved (`longitude,latitude`) |
-| `addressDetails`   | `Address` | Full address object from the GetPlace API response                   |
+| `addressLineOne`   | `string`  | Primary address line (street address)                                    |
+| `addressLineTwo`   | `string`  | Secondary address line (apartment, suite, etc.)                          |
+| `city`             | `string`  | City name                                                                |
+| `province`         | `string`  | State or province                                                        |
+| `postalCode`       | `string`  | Postal or ZIP code                                                       |
+| `country`          | `string`  | Country code (ISO 3166-1 alpha-2)                                        |
+| `originalPosition` | `string`  | Original coordinates from API (`longitude,latitude`)                     |
+| `adjustedPosition` | `string`  | User-adjusted coordinates if map pin was moved (`longitude,latitude`)    |
+| `addressDetails`   | `Address` | Full address object from the GetPlace API response                       |
 
 ### Form Input Fields
 
@@ -191,12 +195,12 @@ All fields use `data-type="address-form"` plus a `name` attribute.
 
 #### Address Line One (`name="addressLineOne"`)
 
-| Attribute                    | Default         | Description                                                             |
-| ---------------------------- | --------------- | ----------------------------------------------------------------------- |
-| `label`                      | `"Address"`     | Field label                                                             |
-| `placeholder`                | `"Enter address"` | Placeholder text                                                      |
-| `data-api-name`              | `"suggest"`     | API: `suggest` (addresses + POIs) or `autocomplete` (addresses only)    |
-| `data-show-current-location` | `"true"`        | Show locate button using browser Geolocation API                        |
+| Attribute                    | Default           | Description                                                          |
+| ---------------------------- | ----------------- | -------------------------------------------------------------------- |
+| `label`                      | `"Address"`       | Field label                                                          |
+| `placeholder`                | `"Enter address"` | Placeholder text                                                     |
+| `data-api-name`              | `"suggest"`       | API: `suggest` (addresses + POIs) or `autocomplete` (addresses only) |
+| `data-show-current-location` | `"true"`          | Show locate button using browser Geolocation API                     |
 
 #### Other Fields
 
@@ -210,22 +214,22 @@ All fields use `data-type="address-form"` plus a `name` attribute.
 
 Map component for previewing and adjusting the selected address location.
 
-| Property                | Type      | HTML Attribute                   | Default | Description                            |
-| ----------------------- | --------- | -------------------------------- | ------- | -------------------------------------- |
-| `mapStyle`              | `array`   | `data-map-style`                 | -       | Map style (see below)                  |
-| `showNavigationControl` | `boolean` | `data-show-navigation-control`   | `true`  | Show map navigation controls           |
-| `adjustablePosition`    | `boolean` | `data-adjustable-position`       | `true`  | Allow users to drag the location pin   |
+| Property                | Type      | HTML Attribute                 | Default | Description                          |
+| ----------------------- | --------- | ------------------------------ | ------- | ------------------------------------ |
+| `mapStyle`              | `array`   | `data-map-style`               | -       | Map style (see below)                |
+| `showNavigationControl` | `boolean` | `data-show-navigation-control` | `true`  | Show map navigation controls         |
+| `adjustablePosition`    | `boolean` | `data-adjustable-position`     | `true`  | Allow users to drag the location pin |
 
 #### Map Style Options
 
-| React (Array)             | HTML (String)       |
-| ------------------------- | ------------------- |
-| `['Standard', 'Light']`   | `"Standard,Light"`  |
-| `['Standard', 'Dark']`    | `"Standard,Dark"`   |
-| `['Monochrome', 'Light']` | `"Monochrome,Light"`|
-| `['Monochrome', 'Dark']`  | `"Monochrome,Dark"` |
-| `['Hybrid']`              | `"Hybrid"`          |
-| `['Satellite']`           | `"Satellite"`       |
+| React (Array)             | HTML (String)        |
+| ------------------------- | -------------------- |
+| `['Standard', 'Light']`   | `"Standard,Light"`   |
+| `['Standard', 'Dark']`    | `"Standard,Dark"`    |
+| `['Monochrome', 'Light']` | `"Monochrome,Light"` |
+| `['Monochrome', 'Dark']`  | `"Monochrome,Dark"`  |
+| `['Hybrid']`              | `"Hybrid"`           |
+| `['Satellite']`           | `"Satellite"`        |
 
 ## License
 

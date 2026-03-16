@@ -62,6 +62,7 @@ export function MapMarker({
           latitude={markerPosition[1]}
           anchor="bottom"
           color={colorScheme === "Light" ? "#000" : "#ddd"}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ref={markerRef as any}
         />
       </>

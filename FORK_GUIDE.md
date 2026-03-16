@@ -30,7 +30,7 @@ import AmazonLocationContext from "../../context/amazon-location-context";
 import { queryClient } from "../../utils/query-client";
 import { GeoPlacesClient } from "@aws-sdk/client-geo-places";
 
-type AmazonLocationProviderProps = PropsWithChildren & { 
+type AmazonLocationProviderProps = PropsWithChildren & {
   client: GeoPlacesClient;
   getToken: () => string;
 };
@@ -99,8 +99,9 @@ export default function CheckoutPage() {
 Support both API key and OAuth2:
 
 ```typescript
-type AmazonLocationProviderProps = PropsWithChildren & (
-  | { apiKey: string; region: string; client?: never; getToken?: never }
-  | { client: GeoPlacesClient; getToken: () => string; apiKey?: never; region?: never }
-);
+type AmazonLocationProviderProps = PropsWithChildren &
+  (
+    | { apiKey: string; region: string; client?: never; getToken?: never }
+    | { client: GeoPlacesClient; getToken: () => string; apiKey?: never; region?: never }
+  );
 ```

@@ -13,7 +13,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "20.x"
+          node-version: "22.x"
           cache: "npm"
 
       - name: Install dependencies
@@ -21,7 +21,7 @@ jobs:
 
       - name: Get PR coverage
         run: |
-          npm test | tee pr_coverage.txt
+          npm test -- --coverage | tee pr_coverage.txt
           echo "PR_STATEMENTS=$(node -p "require('./coverage/coverage-summary.json').total.statements.pct")" >> $GITHUB_ENV
           echo "PR_BRANCHES=$(node -p "require('./coverage/coverage-summary.json').total.branches.pct")" >> $GITHUB_ENV
           echo "PR_FUNCTIONS=$(node -p "require('./coverage/coverage-summary.json').total.functions.pct")" >> $GITHUB_ENV
@@ -31,7 +31,7 @@ jobs:
         run: |
           git fetch origin ${{ github.base_ref }}
           git checkout ${{ github.base_ref }}
-          npm test | tee base_coverage.txt
+          npm test -- --coverage | tee base_coverage.txt
           echo "BASE_STATEMENTS=$(node -p "require('./coverage/coverage-summary.json').total.statements.pct")" >> $GITHUB_ENV
           echo "BASE_BRANCHES=$(node -p "require('./coverage/coverage-summary.json').total.branches.pct")" >> $GITHUB_ENV
           echo "BASE_FUNCTIONS=$(node -p "require('./coverage/coverage-summary.json').total.functions.pct")" >> $GITHUB_ENV

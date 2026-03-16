@@ -1,4 +1,9 @@
-import { Address, GetPlaceAdditionalFeature, type GetPlaceCommandOutput, type RelatedPlace } from "@chaosity/location-client";
+import {
+  Address,
+  GetPlaceAdditionalFeature,
+  type GetPlaceCommandOutput,
+  type RelatedPlace,
+} from "@chaosity/location-client";
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
@@ -54,16 +59,16 @@ export interface TypeaheadProps {
 const getSecondaryDesignator = (result: GetPlaceCommandOutput): string | undefined => {
   const components = result.Address?.SecondaryAddressComponents;
   if (components && components.length > 0) {
-    return components.map((c) => c.Number).filter(Boolean).join(", ");
+    return components
+      .map((c) => c.Number)
+      .filter(Boolean)
+      .join(", ");
   }
   return undefined;
 };
 
 /** Builds TypeaheadOutput from a GetPlace result */
-const buildOutput = (
-  result: GetPlaceCommandOutput,
-  fallbackTitle: string,
-): TypeaheadOutput => {
+const buildOutput = (result: GetPlaceCommandOutput, fallbackTitle: string): TypeaheadOutput => {
   const [lng, lat] = result.Position ?? [];
   const matchedCountry = countries.find((c) => c.code === result.Address?.Country?.Code2);
   const addressLineOneFallback = result.Address?.Label || fallbackTitle;
@@ -311,7 +316,11 @@ const APITypeahead = ({
 
                 {/* Parent address — select without a specific unit */}
                 <ComboboxOption
-                  value={expanded.result.SecondaryAddresses?.[0] ? { placeId: expanded.output.placeId, title: expanded.title } as TypeaheadResultItem : null}
+                  value={
+                    expanded.result.SecondaryAddresses?.[0]
+                      ? ({ placeId: expanded.output.placeId, title: expanded.title } as TypeaheadResultItem)
+                      : null
+                  }
                   className={clsx(option, "aws-typeahead-results__option")}
                   disabled
                 >

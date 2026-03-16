@@ -24,12 +24,11 @@ const mockGetConfig = () =>
   });
 
 // Create a wrapper component for testing hooks that need the providers
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const createWrapper = (_client?: GeoPlacesClient) => {
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
-      <LocationClientProvider getConfig={mockGetConfig}>
-        {children}
-      </LocationClientProvider>
+      <LocationClientProvider getConfig={mockGetConfig}>{children}</LocationClientProvider>
     </QueryClientProvider>
   );
 };

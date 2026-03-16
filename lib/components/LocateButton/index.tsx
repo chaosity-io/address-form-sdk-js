@@ -43,14 +43,13 @@ export function LocateButton({ onLocate, className = "", ...restProps }: LocateB
         if (!placeId) return;
 
         // Get full place details
-        const placeResult = await queryClient.ensureQueryData(
-          getPlaceQuery(client, { PlaceId: placeId }),
-        );
+        const placeResult = await queryClient.ensureQueryData(getPlaceQuery(client, { PlaceId: placeId }));
 
         const matchedCountry = countries.find((c) => c.code === placeResult.Address?.Country?.Code2);
         const addressLineOneFallback = placeResult.Address?.Label || "";
         const addressLineOneField = matchedCountry?.supported
-          ? [placeResult.Address?.AddressNumber, placeResult.Address?.Street].filter(Boolean).join(" ") || addressLineOneFallback
+          ? [placeResult.Address?.AddressNumber, placeResult.Address?.Street].filter(Boolean).join(" ") ||
+            addressLineOneFallback
           : addressLineOneFallback;
 
         onLocate({

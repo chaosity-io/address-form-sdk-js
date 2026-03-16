@@ -6,7 +6,6 @@ import { Logo } from "../../icons/Logo";
 import { logo } from "./styles.css";
 import { getColorScheme, getMapStyleType } from "./utils";
 
-
 export type ColorScheme = "Light" | "Dark";
 
 export type MapStyleType = "Standard" | "Monochrome" | "Hybrid" | "Satellite";

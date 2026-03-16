@@ -71,9 +71,12 @@ describe("Map Component", () => {
   });
 
   it("includes politicalView in the mapStyle URL when provided", () => {
-    renderWithProvider(<Map mapStyle={["Standard", "Light"]} politicalView="IN" apiUrl="https://test-api.chaosity.cloud" />);
+    renderWithProvider(
+      <Map mapStyle={["Standard", "Light"]} politicalView="IN" apiUrl="https://test-api.chaosity.cloud" />,
+    );
     const mapComponent = screen.getByTestId("mock-maplibre-map");
-    const expectedMapStyle = "https://test-api.chaosity.cloud/maps/Standard/descriptor?color-scheme=Light&political-view=IN";
+    const expectedMapStyle =
+      "https://test-api.chaosity.cloud/maps/Standard/descriptor?color-scheme=Light&political-view=IN";
     expect(mapComponent).toHaveAttribute("data-mapstyle", expectedMapStyle);
   });
 

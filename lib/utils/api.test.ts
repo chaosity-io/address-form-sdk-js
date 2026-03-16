@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { autocomplete, suggest, getPlace } from "./api";
-import {
-  AutocompleteCommand,
-  SuggestCommand,
-  GetPlaceCommand,
-} from "@chaosity/location-client";
+import { AutocompleteCommand, SuggestCommand, GetPlaceCommand } from "@chaosity/location-client";
 import { GeoPlacesClient } from "@chaosity/location-client";
 
 vi.mock("@chaosity/location-client", () => {

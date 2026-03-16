@@ -1,4 +1,9 @@
-import { Address, AutocompleteFilterPlaceType, type GetPlaceIntendedUse, type RelatedPlace } from "@chaosity/location-client";
+import {
+  Address,
+  AutocompleteFilterPlaceType,
+  type GetPlaceIntendedUse,
+  type RelatedPlace,
+} from "@chaosity/location-client";
 import clsx from "clsx";
 import { ComponentProps, FormEventHandler, FunctionComponent, ReactNode, useEffect, useRef, useState } from "react";
 import { AddressFormAddressField, AddressFormAddressFieldProps } from "./AddressFormAddressField";
