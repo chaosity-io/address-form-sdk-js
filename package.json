@@ -26,7 +26,7 @@
     "build:storybook": "storybook build",
     "test": "vitest run --coverage",
     "format": "prettier --write .",
-    "prepare": "vite build"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@chaosity/location-client": "file:../location-service-client",
@@ -54,6 +54,7 @@
     "eslint-plugin-react-refresh": "^0.4.19",
     "eslint-plugin-storybook": "^0.12.0",
     "glob": "^12.0.0",
+    "husky": "^9.0.0",
     "globals": "^16.0.0",
     "jsdom": "^26.1.0",
     "jsdom-testing-mocks": "^1.13.1",
