@@ -51,6 +51,11 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./lib/setup-tests.ts",
+    server: {
+      deps: {
+        inline: ["@chaosity/location-client", "@chaosity/location-client-react"],
+      },
+    },
 
     coverage: {
       include: ["lib/**"],
