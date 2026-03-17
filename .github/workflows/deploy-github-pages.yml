@@ -10,23 +10,35 @@ permissions:
   pages: write
   id-token: write
 
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
 env:
   STORYBOOK_SDK_API_KEY: ${{ secrets.STORYBOOK_SDK_API_KEY }}
   STORYBOOK_SDK_REGION: ${{ secrets.STORYBOOK_SDK_REGION }}
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6.0.2
-        with:
-          fetch-depth: 0
       - uses: actions/setup-node@v6.3.0
         with:
           node-version: "22"
-      - uses: bitovi/github-actions-storybook-to-github-pages@v1.0.3
+          cache: "npm"
+      - run: npm ci
+      - run: npm run build:storybook
+      - uses: actions/upload-pages-artifact@v3
         with:
-          install_command: npm install
-          build_command: npm run build:storybook
           path: storybook-static
-          checkout: false
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
