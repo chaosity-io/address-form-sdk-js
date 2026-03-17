@@ -1,6 +1,12 @@
 import type { Preview } from "@storybook/react";
-import { AmazonLocationProvider } from "@/components/AmazonLocationProvider";
+import { LocationClientProvider } from "@chaosity/location-client-react";
 import "maplibre-gl/dist/maplibre-gl.css";
+
+const getConfig = async () => ({
+  apiUrl: import.meta.env.STORYBOOK_API_URL || "https://api.chaosity.cloud",
+  token: import.meta.env.STORYBOOK_TOKEN || "demo-token",
+  expiresAt: Date.now() + 900_000,
+});
 
 const preview: Preview = {
   parameters: {
@@ -14,12 +20,9 @@ const preview: Preview = {
 
   decorators: [
     (Story) => (
-      <AmazonLocationProvider
-        apiKey={import.meta.env.STORYBOOK_SDK_API_KEY}
-        region={import.meta.env.STORYBOOK_SDK_REGION}
-      >
+      <LocationClientProvider getConfig={getConfig}>
         <Story />
-      </AmazonLocationProvider>
+      </LocationClientProvider>
     ),
   ],
 };
