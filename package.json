@@ -29,8 +29,8 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@chaosity/location-client": "file:../location-service-client",
-    "@chaosity/location-client-react": "file:../location-service-client-react",
+    "@chaosity/location-client": "^0.1.0",
+    "@chaosity/location-client-react": "^0.1.0",
     "@eslint/js": "^9.22.0",
     "@storybook/addon-essentials": "^8.6.12",
     "@storybook/addon-interactions": "^8.6.12",

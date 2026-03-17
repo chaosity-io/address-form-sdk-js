@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 set -e
-echo "pre-push: clean build check"
+echo "pre-push: lint, test, build"
 rm -rf dist
 npm ci
+npm run lint
+npm test
 npm run build
