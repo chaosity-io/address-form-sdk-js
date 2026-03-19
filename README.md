@@ -231,6 +231,43 @@ Map component for previewing and adjusting the selected address location.
 | `['Hybrid']`              | `"Hybrid"`           |
 | `['Satellite']`           | `"Satellite"`        |
 
+## Error Handling
+
+API errors (autocomplete, suggest, place detail) are handled automatically:
+
+- A notification banner appears inside the form describing the failure
+- The error is logged to `console.error` with a link to [troubleshooting docs](https://docs.chaosity.cloud/address-form)
+- The error is re-thrown so you can handle it in your own code if needed
+
+If `getConfig` fails or returns an expired token, the `LocationClientProvider` will call `getConfig` again on the next request. No manual retry logic is needed.
+
+## Logging
+
+Errors are logged to `console.error` with context:
+
+```
+Address autocomplete failed. See https://docs.chaosity.cloud/address-form for troubleshooting. Error: ...
+```
+
+For deeper debugging of token refresh and API calls, enable debug logging on the underlying client libraries:
+
+```bash
+# Browser console
+localStorage.debug = 'chaosity:*'
+
+# Node.js
+DEBUG=chaosity:* node app.js
+```
+
+## TypeScript Support
+
+This package ships with TypeScript declarations. All props and types are exported:
+
+```typescript
+import type { AddressFormData, SubmitHandler } from "@chaosity/address-form";
+import type { AutocompleteFilterPlaceType } from "@chaosity/location-client";
+```
+
 ## License
 
 Apache-2.0
