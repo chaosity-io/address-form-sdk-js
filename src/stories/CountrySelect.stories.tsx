@@ -1,7 +1,8 @@
-import { action } from "storybook/actions";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { CountrySelect, CountrySelectProps } from "../../lib/main";
+import { action } from "storybook/actions";
+import type { CountrySelectProps } from "../../lib/main";
+import { CountrySelect } from "../../lib/main";
 
 // Controlled wrapper for single selection
 const ControlledSingleCountrySelect = (props: Omit<CountrySelectProps, "multiple" | "value" | "onChange">) => {

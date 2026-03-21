@@ -1,15 +1,13 @@
-import {
-  AutocompleteCommand,
-  SuggestCommand,
-  GetPlaceCommand,
+import type {
   AutocompleteCommandInput,
   AutocompleteCommandOutput,
-  SuggestCommandInput,
-  SuggestCommandOutput,
+  GeoPlacesClient,
   GetPlaceCommandInput,
   GetPlaceCommandOutput,
+  SuggestCommandInput,
+  SuggestCommandOutput,
 } from "@chaosity/location-client";
-import { GeoPlacesClient } from "@chaosity/location-client";
+import { AutocompleteCommand, GetPlaceCommand, SuggestCommand } from "@chaosity/location-client";
 import { useNotificationStore } from "../stores/notificationStore";
 
 export const autocomplete = async (

@@ -1,11 +1,11 @@
-import { GetPlaceCommandOutput } from "@chaosity/location-client";
+import type { GetPlaceCommandOutput } from "@chaosity/location-client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProvider } from "../../test/utils";
 import * as api from "../../utils/api";
 import { Typeahead } from "./index";
-import { useState } from "react";
 
 vi.mock("../../utils/api", () => ({
   getPlace: vi.fn(),

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getMapStyleType, getColorScheme } from "./utils";
-import { ColorScheme, MapStyle, MapStyleType } from "./index";
+import type { ColorScheme, MapStyle, MapStyleType } from "./index";
+import { getColorScheme, getMapStyleType } from "./utils";
 
 describe("getMapStyleType", () => {
   it("should return the first element when extendedMapStyle is an array with MapStyleType", () => {

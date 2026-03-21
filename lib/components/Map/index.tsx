@@ -1,7 +1,8 @@
-import MapLibreMap, { MapProps as MapLibreMapProps, NavigationControl } from "react-map-gl/maplibre";
-import { useLocationClient } from "@chaosity/location-client-react";
 import { buildMapStyleUrl, createTransformRequest } from "@chaosity/location-client";
+import { useLocationClient } from "@chaosity/location-client-react";
 import { useMemo } from "react";
+import type { MapProps as MapLibreMapProps } from "react-map-gl/maplibre";
+import MapLibreMap, { NavigationControl } from "react-map-gl/maplibre";
 import { Logo } from "../../icons/Logo";
 import { logo } from "./styles.css";
 import { getColorScheme, getMapStyleType } from "./utils";

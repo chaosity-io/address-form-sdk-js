@@ -1,4 +1,4 @@
-import { AddressFormField } from ".";
+import type { AddressFormField } from ".";
 
 export const FormFieldID = {
   ADDRESS_LINE_ONE: "aws-address-line-one",

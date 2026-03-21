@@ -1,7 +1,7 @@
-import { AutocompleteFilterPlaceType } from "@chaosity/location-client";
+import type { AutocompleteFilterPlaceType } from "@chaosity/location-client";
 import { createContext, useContext } from "react";
+import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
 import type { AddressFormData } from "./AddressForm";
-import { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
 
 export interface MapViewState {
   longitude: number;

@@ -1,8 +1,8 @@
+import { GeoPlacesClient } from "@chaosity/location-client";
 import { QueryClient } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "./api";
 import { autocompleteQuery, getPlaceQuery, suggestQuery } from "./queries";
-import { GeoPlacesClient } from "@chaosity/location-client";
 
 vi.mock("./api", () => ({
   autocomplete: vi.fn(() => []),

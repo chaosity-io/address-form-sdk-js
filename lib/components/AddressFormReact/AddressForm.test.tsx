@@ -1,14 +1,16 @@
-import { fireEvent, waitFor, screen, act } from "@testing-library/react";
-import { useContext, useEffect } from "react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { renderWithProvider } from "../../test/utils";
-import { AddressForm } from "./AddressForm";
-import { AddressFormContext, AddressFormContextType, useAddressFormContext } from "./AddressFormContext";
 import { GeoPlacesClient, GetPlaceIntendedUse } from "@chaosity/location-client";
-import * as api from "../../utils/api";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { useContext, useEffect } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useNotificationStore } from "../../stores/notificationStore";
+import { renderWithProvider } from "../../test/utils";
+import * as api from "../../utils/api";
+import { AddressForm } from "./AddressForm";
+import type { AddressFormContextType } from "./AddressFormContext";
+import { AddressFormContext, useAddressFormContext } from "./AddressFormContext";
 
 vi.mock("../../utils/api", async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
   const actual = await importOriginal<typeof import("../../utils/api")>();
   return { ...actual, getPlace: vi.fn() };
 });

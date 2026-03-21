@@ -1,13 +1,14 @@
-import { AutocompleteCommandOutput, SuggestCommandOutput } from "@chaosity/location-client";
-import { renderHook, waitFor } from "@testing-library/react";
-import { ReactNode } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { AutocompleteCommandOutput, SuggestCommandOutput } from "@chaosity/location-client";
 import { GeoPlacesClient } from "@chaosity/location-client";
 import { LocationClientProvider } from "@chaosity/location-client-react";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { renderHook, waitFor } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../../utils/api";
 import { queryClient } from "../../utils/query-client";
-import { TypeaheadAPIName, useTypeaheadQuery } from "./use-typeahead-query";
+import type { TypeaheadAPIName } from "./use-typeahead-query";
+import { useTypeaheadQuery } from "./use-typeahead-query";
 
 // Mock the API functions
 vi.mock("../../utils/api", () => ({
@@ -24,7 +25,7 @@ const mockGetConfig = () =>
   });
 
 // Create a wrapper component for testing hooks that need the providers
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+
 const createWrapper = (_client?: GeoPlacesClient) => {
   return ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>

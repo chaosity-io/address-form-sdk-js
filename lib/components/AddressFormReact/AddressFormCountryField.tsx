@@ -2,7 +2,7 @@ import { memo, useId } from "react";
 import { CountrySelect } from "../CountrySelect";
 import { FormField } from "../FormField";
 import { useAddressFormContext } from "./AddressFormContext";
-import { Field } from "./AddressFormFields";
+import type { Field } from "./AddressFormFields";
 
 export interface AddressFormCountryFieldProps {
   name: Field;

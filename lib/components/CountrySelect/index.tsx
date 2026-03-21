@@ -1,8 +1,11 @@
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import clsx from "clsx";
-import { ChangeEvent, useMemo, useState } from "react";
-import { countries, Country } from "../../data/countries";
-import { Input, InputProps } from "../Input";
+import type { ChangeEvent } from "react";
+import { useMemo, useState } from "react";
+import type { Country } from "../../data/countries";
+import { countries } from "../../data/countries";
+import type { InputProps } from "../Input";
+import { Input } from "../Input";
 import { option, options } from "../Typeahead/styles.css";
 import * as styles from "./styles.css";
 

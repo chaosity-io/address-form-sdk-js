@@ -1,4 +1,4 @@
-import { ColorScheme, MapStyle, MapStyleType } from ".";
+import type { ColorScheme, MapStyle, MapStyleType } from ".";
 
 export const getMapStyleType = (extendedMapStyle: MapStyle, defaultValue: MapStyleType = "Standard"): MapStyleType => {
   if (Array.isArray(extendedMapStyle)) {

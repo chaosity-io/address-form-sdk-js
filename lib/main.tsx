@@ -1,6 +1,6 @@
 // Components
-export { AddressForm, type AddressFormData, type SubmitHandler } from "./components/AddressFormReact";
 export { LocationClientProvider } from "@chaosity/location-client-react";
+export { AddressForm, type AddressFormData, type SubmitHandler } from "./components/AddressFormReact";
 export { Button } from "./components/Button";
 export { CountrySelect, type CountrySelectProps } from "./components/CountrySelect";
 export { Flex } from "./components/Flex";
@@ -12,8 +12,8 @@ export { MapMarker } from "./components/MapMarker";
 export { Typeahead } from "./components/Typeahead";
 
 // Utils
+export { getColorScheme, getMapStyleType } from "./components/Map/utils";
 export { getIncludeCountriesFilter } from "./utils/country-filter";
-export { getMapStyleType, getColorScheme } from "./components/Map/utils";
 
 // Data
 export { countries } from "./data/countries";
@@ -23,13 +23,13 @@ import "maplibre-gl/dist/maplibre-gl.css";
 
 // Legacy exports - deprecated, use components from AddressFormReact instead
 export { AddressForm as __AddressForm, AddressFormMap as __AddressFormMap } from "./components/AddressForm";
-export {
-  defaultAddressFormFields as __defaultAddressFormFields,
-  FormFieldID as __FormFieldID,
-} from "./components/AddressForm/form-field";
 export type {
-  AddressFormProps as __AddressFormProps,
-  AddressFormMapProps as __AddressFormMapProps,
-  AddressFormField as __AddressFormField,
   AddressFormData as __AddressFormData,
+  AddressFormField as __AddressFormField,
+  AddressFormMapProps as __AddressFormMapProps,
+  AddressFormProps as __AddressFormProps,
 } from "./components/AddressForm";
+export {
+  FormFieldID as __FormFieldID,
+  defaultAddressFormFields as __defaultAddressFormFields,
+} from "./components/AddressForm/form-field";

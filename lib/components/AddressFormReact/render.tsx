@@ -1,13 +1,15 @@
-import { AutocompleteFilterPlaceType } from "@chaosity/location-client";
-import { FunctionComponent, useEffect } from "react";
-import { createRoot } from "react-dom/client";
+import type { AutocompleteFilterPlaceType, ClientConfig } from "@chaosity/location-client";
 import { LocationClientProvider } from "@chaosity/location-client-react";
-import { ClientConfig } from "@chaosity/location-client";
+import type { FunctionComponent } from "react";
+import { useEffect } from "react";
+import { createPortal } from "react-dom";
+import { createRoot } from "react-dom/client";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
 import { getPlace } from "../../utils/api";
 import { Button } from "../Button";
 import { ComponentInjector } from "../ComponentInjector";
-import { ColorScheme, MapStyle, MapStyleType } from "../Map";
+import type { ColorScheme, MapStyle, MapStyleType } from "../Map";
+import { NotificationContainer } from "../Notification";
 import type { SubmitHandler } from "./AddressForm";
 import { AddressFormAddressField } from "./AddressFormAddressField";
 import { AddressFormAutofillHandler } from "./AddressFormAutofillHandler";
@@ -18,8 +20,6 @@ import { AddressFormMap } from "./AddressFormMap";
 import { AddressFormProvider } from "./AddressFormProvider";
 import { AddressFormTextField } from "./AddressFormTextField";
 import { getBoolean, getString } from "./utils";
-import { NotificationContainer } from "../Notification";
-import { createPortal } from "react-dom";
 
 export interface RenderParams {
   root: string;

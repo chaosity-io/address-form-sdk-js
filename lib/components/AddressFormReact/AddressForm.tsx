@@ -1,23 +1,24 @@
-import {
-  Address,
-  AutocompleteFilterPlaceType,
-  type GetPlaceIntendedUse,
-  type RelatedPlace,
-} from "@chaosity/location-client";
+import type { Address, AutocompleteFilterPlaceType } from "@chaosity/location-client";
+import { type GetPlaceIntendedUse, type RelatedPlace } from "@chaosity/location-client";
 import clsx from "clsx";
-import { ComponentProps, FormEventHandler, FunctionComponent, ReactNode, useEffect, useRef, useState } from "react";
-import { AddressFormAddressField, AddressFormAddressFieldProps } from "./AddressFormAddressField";
-import { AddressFormAutofillHandler } from "./AddressFormAutofillHandler";
-import { useAddressFormContext } from "./AddressFormContext";
-import { AddressFormCountryField, AddressFormCountryFieldProps } from "./AddressFormCountryField";
-import { AddressFormFields } from "./AddressFormFields";
-import { AddressFormMap, AddressFormMapProps } from "./AddressFormMap";
-import { AddressFormProvider } from "./AddressFormProvider";
-import { AddressFormTextField, AddressFormTextFieldProps } from "./AddressFormTextField";
-import * as styles from "./styles.css";
+import type { ComponentProps, FormEventHandler, FunctionComponent, ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
 import { getPlace } from "../../utils/api";
 import { NotificationContainer } from "../Notification";
+import type { AddressFormAddressFieldProps } from "./AddressFormAddressField";
+import { AddressFormAddressField } from "./AddressFormAddressField";
+import { AddressFormAutofillHandler } from "./AddressFormAutofillHandler";
+import { useAddressFormContext } from "./AddressFormContext";
+import type { AddressFormCountryFieldProps } from "./AddressFormCountryField";
+import { AddressFormCountryField } from "./AddressFormCountryField";
+import { AddressFormFields } from "./AddressFormFields";
+import type { AddressFormMapProps } from "./AddressFormMap";
+import { AddressFormMap } from "./AddressFormMap";
+import { AddressFormProvider } from "./AddressFormProvider";
+import type { AddressFormTextFieldProps } from "./AddressFormTextField";
+import { AddressFormTextField } from "./AddressFormTextField";
+import * as styles from "./styles.css";
 
 export interface AddressFormData {
   placeId?: string;

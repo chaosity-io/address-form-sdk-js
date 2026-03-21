@@ -1,20 +1,24 @@
-import type { AutocompleteFilterPlaceType, Address } from "@chaosity/location-client";
+import type { Address, AutocompleteFilterPlaceType } from "@chaosity/location-client";
 import clsx from "clsx";
-import { ComponentProps, FormEventHandler, useState } from "react";
+import type { ComponentProps, FormEventHandler } from "react";
+import { useState } from "react";
+import { countries, getColorScheme } from "../../main.tsx";
 import type { Config } from "../../types/config.ts";
 import { getIncludeCountriesFilter } from "../../utils/country-filter.ts";
+import { positionToString } from "../../utils/position.ts";
 import { Button } from "../Button";
 import { CountrySelect } from "../CountrySelect/index.tsx";
 import { FormField } from "../FormField";
 import { Input } from "../Input";
-import { Map, MapProps, MapStyle } from "../Map";
-import { MapMarker, MapMarkerProps } from "../MapMarker/index.tsx";
-import { Typeahead, TypeaheadOutput, TypeaheadProps } from "../Typeahead";
-import { TypeaheadAPIName } from "../Typeahead/use-typeahead-query.ts";
-import * as styles from "./styles.css.ts";
-import { positionToString } from "../../utils/position.ts";
-import { countries, getColorScheme } from "../../main.tsx";
+import type { MapProps, MapStyle } from "../Map";
+import { Map } from "../Map";
+import type { MapMarkerProps } from "../MapMarker/index.tsx";
+import { MapMarker } from "../MapMarker/index.tsx";
+import type { TypeaheadOutput, TypeaheadProps } from "../Typeahead";
+import { Typeahead } from "../Typeahead";
+import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query.ts";
 import { defaultAddressFormFields, FormFieldID } from "./form-field.ts";
+import * as styles from "./styles.css.ts";
 
 export interface AddressFormData {
   addressLineOne?: string;

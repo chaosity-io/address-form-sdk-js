@@ -1,5 +1,5 @@
-import { describe, it, expect } from "vitest";
-import { ReactElement, ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
+import { describe, expect, it } from "vitest";
 import { replaceChildElements } from "./replace-child-elements";
 
 describe("replaceChildElements", () => {

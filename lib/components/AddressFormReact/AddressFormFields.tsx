@@ -1,8 +1,9 @@
-import { ComponentProps, memo, PropsWithChildren } from "react";
+import type { ComponentProps, PropsWithChildren } from "react";
+import { memo } from "react";
 import { replaceChildElements } from "../../utils/replace-child-elements";
-import type { AddressFormData } from "./AddressForm";
 import { Button } from "../Button";
-import { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
+import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
+import type { AddressFormData } from "./AddressForm";
 import { AddressFormAddressField } from "./AddressFormAddressField";
 import { AddressFormCountryField } from "./AddressFormCountryField";
 import { AddressFormTextField } from "./AddressFormTextField";

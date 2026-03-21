@@ -1,13 +1,10 @@
-import {
-  Address,
-  GetPlaceAdditionalFeature,
-  type GetPlaceCommandOutput,
-  type RelatedPlace,
-} from "@chaosity/location-client";
+import type { Address } from "@chaosity/location-client";
+import { GetPlaceAdditionalFeature, type GetPlaceCommandOutput, type RelatedPlace } from "@chaosity/location-client";
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { countries } from "../../data/countries.ts";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context.ts";
 import { useDebounce } from "../../utils/debounce.ts";
 import { getPlaceQuery } from "../../utils/queries.ts";
@@ -28,8 +25,8 @@ import {
   secondaryLabel,
   secondaryOption,
 } from "./styles.css.ts";
-import { TypeaheadAPIInput, TypeaheadAPIName, TypeaheadResultItem, useTypeaheadQuery } from "./use-typeahead-query.ts";
-import { countries } from "../../data/countries.ts";
+import type { TypeaheadAPIInput, TypeaheadAPIName, TypeaheadResultItem } from "./use-typeahead-query.ts";
+import { useTypeaheadQuery } from "./use-typeahead-query.ts";
 
 export interface TypeaheadOutput {
   placeId?: string;

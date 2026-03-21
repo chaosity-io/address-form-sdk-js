@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { useContext } from "react";
-import { AddressFormContext, AddressFormContextType } from "./AddressFormContext";
+import { describe, expect, it, vi } from "vitest";
+import type { AddressFormContextType } from "./AddressFormContext";
+import { AddressFormContext } from "./AddressFormContext";
 
 describe("AddressFormContext", () => {
   it("provides undefined by default", () => {

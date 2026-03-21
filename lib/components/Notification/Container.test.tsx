@@ -1,8 +1,8 @@
 import { render, screen } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { describe, it, expect, beforeEach } from "vitest";
-import { Container } from "./Container";
+import { beforeEach, describe, expect, it } from "vitest";
 import { useNotificationStore } from "../../stores/notificationStore";
+import { Container } from "./Container";
 
 describe("Notification Container", () => {
   beforeEach(() => {

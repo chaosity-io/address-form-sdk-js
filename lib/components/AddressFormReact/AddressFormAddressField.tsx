@@ -1,10 +1,11 @@
 import { memo, useEffect, useId } from "react";
 import { getIncludeCountriesFilter } from "../../utils/country-filter";
 import { FormField } from "../FormField";
-import { Typeahead, TypeaheadOutput } from "../Typeahead";
-import { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
+import type { TypeaheadOutput } from "../Typeahead";
+import { Typeahead } from "../Typeahead";
+import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
 import { useAddressFormContext } from "./AddressFormContext";
-import { Field } from "./AddressFormFields";
+import type { Field } from "./AddressFormFields";
 
 export interface AddressFormAddressFieldProps {
   name: Field;

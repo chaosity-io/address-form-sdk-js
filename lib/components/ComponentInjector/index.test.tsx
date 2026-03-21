@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
 import { ComponentInjector } from "./index";
 
 describe("ComponentInjector", () => {

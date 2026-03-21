@@ -1,5 +1,9 @@
-import { AutocompleteCommandInput, GetPlaceCommandInput, SuggestCommandInput } from "@chaosity/location-client";
-import { GeoPlacesClient } from "@chaosity/location-client";
+import type {
+  AutocompleteCommandInput,
+  GeoPlacesClient,
+  GetPlaceCommandInput,
+  SuggestCommandInput,
+} from "@chaosity/location-client";
 import { autocomplete, getPlace, suggest } from "./api";
 
 export const autocompleteQuery = (client: GeoPlacesClient, input: AutocompleteCommandInput) => {

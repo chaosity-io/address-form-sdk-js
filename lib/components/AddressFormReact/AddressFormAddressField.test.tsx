@@ -4,7 +4,8 @@ import { describe, expect, it, vi } from "vitest";
 import { renderWithProvider } from "../../test/utils";
 import * as api from "../../utils/api";
 import { AddressFormAddressField } from "./AddressFormAddressField";
-import { AddressFormContext, AddressFormContextType } from "./AddressFormContext";
+import type { AddressFormContextType } from "./AddressFormContext";
+import { AddressFormContext } from "./AddressFormContext";
 
 // Mock the autocomplete, getPlace, and suggest functions
 vi.mock("../../utils/api", () => ({

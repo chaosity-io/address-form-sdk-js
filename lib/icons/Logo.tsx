@@ -1,4 +1,4 @@
-import { ComponentProps } from "react";
+import type { ComponentProps } from "react";
 
 interface LogoProps extends ComponentProps<"a"> {
   mode: "Light" | "Dark";

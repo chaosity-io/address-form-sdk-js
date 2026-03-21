@@ -2,10 +2,11 @@ import { fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderWithProvider } from "../../test/utils";
-import { MapProps } from "../Map";
-import { TypeaheadProps } from "../Typeahead";
-import { AddressForm, AddressFormData, AddressFormProps } from "./index";
+import type { MapProps } from "../Map";
+import type { TypeaheadProps } from "../Typeahead";
 import { defaultAddressFormFields } from "./form-field";
+import type { AddressFormData, AddressFormProps } from "./index";
+import { AddressForm } from "./index";
 
 vi.mock("../Map", () => ({
   Map: ({ children, zoom }: MapProps) => (

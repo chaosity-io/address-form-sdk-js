@@ -1,7 +1,8 @@
-import { render, RenderOptions } from "@testing-library/react";
-import { ReactNode } from "react";
 import { LocationClientProvider } from "@chaosity/location-client-react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type { RenderOptions } from "@testing-library/react";
+import { render } from "@testing-library/react";
+import type { ReactNode } from "react";
 
 // Regular function (not vi.fn) so vi.clearAllMocks() cannot clear its implementation
 const mockGetConfig = () =>

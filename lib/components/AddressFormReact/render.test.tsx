@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { fireEvent, act, waitFor, screen } from "@testing-library/react";
-import { render } from "./render";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it } from "vitest";
 import { useNotificationStore } from "../../stores/notificationStore";
+import { render } from "./render";
 
 const mockGetConfig = async () => ({
   apiUrl: "https://test-api.chaosity.cloud",

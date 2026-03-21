@@ -1,8 +1,8 @@
 import { useRef, useState } from "react";
 import { Marker } from "react-map-gl/maplibre";
+import type { ColorScheme } from "../Map/index.tsx";
 import { AdjustButton } from "./AdjustButton";
 import { buttons } from "./styles.css.ts";
-import { ColorScheme } from "../Map/index.tsx";
 
 export interface MapMarkerProps {
   adjustablePosition?: boolean;

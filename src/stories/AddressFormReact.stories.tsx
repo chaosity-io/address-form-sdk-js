@@ -1,8 +1,8 @@
 /* any is used to allow child components to be controlled in Storybook */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { LocationClientProvider } from "@chaosity/location-client-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { action } from "storybook/actions";
-import { LocationClientProvider } from "@chaosity/location-client-react";
 import { AddressForm } from "../../lib/components/AddressFormReact/AddressForm";
 import { Flex } from "../../lib/components/Flex";
 

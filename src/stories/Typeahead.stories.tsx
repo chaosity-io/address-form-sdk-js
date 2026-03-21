@@ -1,7 +1,7 @@
-import { action } from "storybook/actions";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { TypeaheadProps } from "../../lib/components/Typeahead";
+import { action } from "storybook/actions";
+import type { TypeaheadProps } from "../../lib/components/Typeahead";
 import { Typeahead } from "../../lib/main";
 
 const ControlledTypeahead = (props: TypeaheadProps) => {

@@ -1,10 +1,12 @@
-import { FunctionComponent } from "react";
-import { Map, MapProps } from "../Map";
-import { MapMarker, MapMarkerProps } from "../MapMarker";
+import type { FunctionComponent } from "react";
+import { useNotificationStore } from "../../stores/notificationStore";
+import type { MapProps } from "../Map";
+import { Map } from "../Map";
+import { getColorScheme } from "../Map/utils";
+import type { MapMarkerProps } from "../MapMarker";
+import { MapMarker } from "../MapMarker";
 import { useAddressFormContext } from "./AddressFormContext";
 import { parsePosition } from "./utils";
-import { getColorScheme } from "../Map/utils";
-import { useNotificationStore } from "../../stores/notificationStore";
 
 export type AddressFormMapProps = MapProps & Pick<MapMarkerProps, "adjustablePosition">;
 

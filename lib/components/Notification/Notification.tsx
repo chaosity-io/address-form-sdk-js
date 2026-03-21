@@ -1,5 +1,5 @@
-import { FunctionComponent } from "react";
-import { Notification as NotificationType } from "../../stores/notificationStore";
+import type { FunctionComponent } from "react";
+import type { Notification as NotificationType } from "../../stores/notificationStore";
 import * as styles from "./styles.css";
 
 type NotificationProps = {

@@ -1,5 +1,5 @@
-import { stylePrimary, styleSecondary, styleSmall, styleLarge } from "./styles.css.ts";
 import { Button as HeadlessButton } from "@headlessui/react";
+import { styleLarge, stylePrimary, styleSecondary, styleSmall } from "./styles.css.ts";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   className?: string;

@@ -1,10 +1,13 @@
-import { GeoPlacesClient, GetPlaceAdditionalFeature } from "@chaosity/location-client";
-import { QueryClient, useQueryClient } from "@tanstack/react-query";
+import type { GeoPlacesClient } from "@chaosity/location-client";
+import { GetPlaceAdditionalFeature } from "@chaosity/location-client";
+import type { QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
-import { AutofillValues, detectAutofill } from "../../utils/detect-autofill";
+import type { AutofillValues } from "../../utils/detect-autofill";
+import { detectAutofill } from "../../utils/detect-autofill";
 import { autocompleteQuery, getPlaceQuery, suggestQuery } from "../../utils/queries";
-import { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
+import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
 import { useAddressFormContext } from "./AddressFormContext";
 import type { Field } from "./AddressFormFields";
 

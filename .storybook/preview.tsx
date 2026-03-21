@@ -1,5 +1,5 @@
-import type { Preview } from "@storybook/react-vite";
 import { LocationClientProvider } from "@chaosity/location-client-react";
+import type { Preview } from "@storybook/react-vite";
 import "maplibre-gl/dist/maplibre-gl.css";
 
 const getConfig = async () => ({

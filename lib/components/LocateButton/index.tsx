@@ -1,11 +1,12 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { ComponentProps, useState } from "react";
+import type { ComponentProps } from "react";
+import { useState } from "react";
+import { countries } from "../../data/countries.ts";
+import useAmazonLocationContext from "../../hooks/use-amazon-location-context.ts";
 import { Locate } from "../../icons/Locate.tsx";
 import { getPlaceQuery, suggestQuery } from "../../utils/queries.ts";
-import { TypeaheadOutput } from "../Typeahead/index.tsx";
+import type { TypeaheadOutput } from "../Typeahead/index.tsx";
 import { styleButton } from "./styles.css.ts";
-import useAmazonLocationContext from "../../hooks/use-amazon-location-context.ts";
-import { countries } from "../../data/countries.ts";
 
 interface LocateButtonProps extends ComponentProps<"button"> {
   onLocate: (address: TypeaheadOutput) => void;

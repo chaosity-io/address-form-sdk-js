@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import type { AddressFormContextType } from "./AddressFormContext";
+import { AddressFormContext } from "./AddressFormContext";
 import { AddressFormMap } from "./AddressFormMap";
-import { AddressFormContext, AddressFormContextType } from "./AddressFormContext";
 
 vi.mock("../Map", () => ({
   Map: vi.fn(({ children, mapStyle, ...props }) => (

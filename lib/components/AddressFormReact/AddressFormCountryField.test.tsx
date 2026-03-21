@@ -1,7 +1,8 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, fireEvent } from "@testing-library/react";
+import { fireEvent, render } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import type { AddressFormContextType } from "./AddressFormContext";
+import { AddressFormContext } from "./AddressFormContext";
 import { AddressFormCountryField } from "./AddressFormCountryField";
-import { AddressFormContext, AddressFormContextType } from "./AddressFormContext";
 
 const mockSetData = vi.fn();
 const mockSetMapViewState = vi.fn();

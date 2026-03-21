@@ -1,5 +1,6 @@
 import clsx from "clsx";
-import { Children, ComponentProps } from "react";
+import type { ComponentProps } from "react";
+import { Children } from "react";
 import * as styles from "./styles.css.ts";
 
 export interface FlexProps extends ComponentProps<"div"> {
