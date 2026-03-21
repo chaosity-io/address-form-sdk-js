@@ -1,7 +1,6 @@
 import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 import react from "@vitejs/plugin-react";
 import path, { resolve } from "path";
-import { visualizer } from "rollup-plugin-visualizer";
 import dts from "vite-plugin-dts";
 import { defineConfig } from "vitest/config";
 
@@ -18,17 +17,14 @@ export default defineConfig({
 
   build: {
     outDir: "dist/lib",
-    // sourcemap: true,
 
     lib: {
       entry: resolve(__dirname, "lib/main.tsx"),
-      formats: ["cjs"], // We can't use ES modules until we upgrade to React v19 in the console
+      formats: ["cjs"],
       fileName: (format) => `address-form-sdk.${format}.js`,
     },
 
-    rollupOptions: {
-      plugins: [visualizer()],
-
+    rolldownOptions: {
       external: [
         "@chaosity/location-client",
         "@chaosity/location-client-react",
@@ -40,7 +36,6 @@ export default defineConfig({
         "react-hook-form",
         "react-map-gl",
         "maplibre-gl",
-        "@vanilla-extract/css",
         "@vis.gl/react-maplibre",
         "react/jsx-runtime",
       ],

@@ -124,7 +124,6 @@ describe("AddressForm", () => {
 
       useEffect(() => {
         setData({ placeId: "test-place-id" });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []);
 
       return (
@@ -168,7 +167,6 @@ describe("AddressForm", () => {
 
       useEffect(() => {
         setData({ placeId: "test-place-id" });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, []);
 
       return (

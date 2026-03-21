@@ -6,7 +6,7 @@ vi.mock("./detect-autofill.css.ts", () => ({
   animation: "mock-animation-name",
 }));
 
-import { detectAutofill } from "./detect-autofill";
+import { type AutofillValues, detectAutofill } from "./detect-autofill";
 
 // Create AnimationEvent for test environment
 class MockAnimationEvent extends Event {
@@ -22,7 +22,7 @@ describe("detectAutofill", () => {
   let form: HTMLFormElement;
   let addressInput: HTMLInputElement;
   let cityInput: HTMLInputElement;
-  let callback: ReturnType<typeof vi.fn>;
+  let callback: ReturnType<typeof vi.fn<(values: AutofillValues) => void>>;
 
   beforeEach(() => {
     callback = vi.fn();

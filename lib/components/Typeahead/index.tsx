@@ -186,7 +186,6 @@ const APITypeahead = ({
       queryClient.removeQueries({ queryKey: ["typeahead"] });
       queryClient.removeQueries({ queryKey: ["getPlace"] });
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [onSelect, queryClient],
   );
 
@@ -240,7 +239,6 @@ const APITypeahead = ({
       // Remove leading space added in onClose to trigger re-render for autofilled values
       onChange(value.trimStart());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- Removed: `onChange`
   }, [value]);
 
   const handleCurrentLocation = (address: TypeaheadOutput) => {
