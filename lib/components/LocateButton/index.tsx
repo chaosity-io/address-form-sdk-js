@@ -4,16 +4,18 @@ import { useState } from "react";
 import { countries } from "../../data/countries.ts";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context.ts";
 import { Locate } from "../../icons/Locate.tsx";
-import { getPlaceQuery, suggestQuery } from "../../utils/queries.ts";
+import { getPlaceQuery, reverseGeocodeQuery, suggestQuery } from "../../utils/queries.ts";
 import type { TypeaheadOutput } from "../Typeahead/index.tsx";
+import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query.ts";
 import { styleButton } from "./styles.css.ts";
 
 interface LocateButtonProps extends ComponentProps<"button"> {
   onLocate: (address: TypeaheadOutput) => void;
+  apiName?: TypeaheadAPIName | null;
   className?: string;
 }
 
-export function LocateButton({ onLocate, className = "", ...restProps }: LocateButtonProps) {
+export function LocateButton({ onLocate, apiName, className = "", ...restProps }: LocateButtonProps) {
   const [isDisabled, setIsDisabled] = useState(false);
   const queryClient = useQueryClient();
   const { client } = useAmazonLocationContext();
@@ -31,16 +33,29 @@ export function LocateButton({ onLocate, className = "", ...restProps }: LocateB
       async (position) => {
         const { longitude, latitude } = position.coords;
 
-        // Use suggest with bias position to find the nearest address
-        const suggestResult = await queryClient.ensureQueryData(
-          suggestQuery(client, {
-            QueryText: `${latitude},${longitude}`,
-            BiasPosition: [longitude, latitude],
-            MaxResults: 1,
-          }),
-        );
+        let placeId: string | undefined;
 
-        const placeId = suggestResult.ResultItems?.[0]?.Place?.PlaceId;
+        if (apiName === "autocomplete") {
+          // Core plan: use reverse geocode to get address from coordinates
+          const reverseResult = await queryClient.ensureQueryData(
+            reverseGeocodeQuery(client, {
+              QueryPosition: [longitude, latitude],
+              MaxResults: 1,
+            }),
+          );
+          placeId = reverseResult.ResultItems?.[0]?.PlaceId;
+        } else {
+          // Pro plan (default): use suggest with bias position
+          const suggestResult = await queryClient.ensureQueryData(
+            suggestQuery(client, {
+              QueryText: `${latitude},${longitude}`,
+              BiasPosition: [longitude, latitude],
+              MaxResults: 1,
+            }),
+          );
+          placeId = suggestResult.ResultItems?.[0]?.Place?.PlaceId;
+        }
+
         if (!placeId) return;
 
         // Get full place details

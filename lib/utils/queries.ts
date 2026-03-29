@@ -2,9 +2,10 @@ import type {
   AutocompleteCommandInput,
   GeoPlacesClient,
   GetPlaceCommandInput,
+  ReverseGeocodeCommandInput,
   SuggestCommandInput,
 } from "@chaosity/location-client";
-import { autocomplete, getPlace, suggest } from "./api";
+import { autocomplete, getPlace, reverseGeocode, suggest } from "./api";
 
 export const autocompleteQuery = (client: GeoPlacesClient, input: AutocompleteCommandInput) => {
   return {
@@ -24,5 +25,12 @@ export const getPlaceQuery = (client: GeoPlacesClient, input: GetPlaceCommandInp
   return {
     queryKey: ["getPlace", input],
     queryFn: () => getPlace(client, input),
+  };
+};
+
+export const reverseGeocodeQuery = (client: GeoPlacesClient, input: ReverseGeocodeCommandInput) => {
+  return {
+    queryKey: ["reverseGeocode", input],
+    queryFn: () => reverseGeocode(client, input),
   };
 };

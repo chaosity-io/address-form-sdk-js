@@ -378,7 +378,9 @@ const APITypeahead = ({
         )}
       </Combobox>
 
-      {showCurrentLocation && <LocateButton onLocate={handleCurrentLocation} className={currentLocation} />}
+      {showCurrentLocation && (
+        <LocateButton onLocate={handleCurrentLocation} apiName={apiName} className={currentLocation} />
+      )}
     </div>
   );
 };

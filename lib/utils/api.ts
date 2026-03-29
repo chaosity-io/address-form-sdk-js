@@ -4,10 +4,12 @@ import type {
   GeoPlacesClient,
   GetPlaceCommandInput,
   GetPlaceCommandOutput,
+  ReverseGeocodeCommandInput,
+  ReverseGeocodeCommandOutput,
   SuggestCommandInput,
   SuggestCommandOutput,
 } from "@chaosity/location-client";
-import { AutocompleteCommand, GetPlaceCommand, SuggestCommand } from "@chaosity/location-client";
+import { AutocompleteCommand, GetPlaceCommand, ReverseGeocodeCommand, SuggestCommand } from "@chaosity/location-client";
 import { useNotificationStore } from "../stores/notificationStore";
 
 export const autocomplete = async (
@@ -42,6 +44,19 @@ export const getPlace = async (
     return await client.send(command);
   } catch (error) {
     handleApiError(error, "get-place", "Place details");
+    throw error;
+  }
+};
+
+export const reverseGeocode = async (
+  client: GeoPlacesClient,
+  input: ReverseGeocodeCommandInput,
+): Promise<ReverseGeocodeCommandOutput> => {
+  try {
+    const command = new ReverseGeocodeCommand(input);
+    return await client.send(command);
+  } catch (error) {
+    handleApiError(error, "reverse-geocode", "Reverse geocode");
     throw error;
   }
 };
