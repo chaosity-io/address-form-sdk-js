@@ -7,11 +7,12 @@ import { AddressFormAddressField } from "./AddressFormAddressField";
 import type { AddressFormContextType } from "./AddressFormContext";
 import { AddressFormContext } from "./AddressFormContext";
 
-// Mock the autocomplete, getPlace, and suggest functions
+// Mock the autocomplete, getPlace, suggest, and reverseGeocode functions
 vi.mock("../../utils/api", () => ({
   autocomplete: vi.fn(),
   suggest: vi.fn(),
   getPlace: vi.fn(),
+  reverseGeocode: vi.fn(),
 }));
 
 const mockSetData = vi.fn();
@@ -268,13 +269,14 @@ describe("AddressFormAddressField", () => {
       setData: mockSetData,
     };
 
-    // Mock suggest response (used by LocateButton for coordinate lookup)
-    vi.mocked(api.suggest).mockResolvedValue({
+    // Mock reverseGeocode response (used by LocateButton with apiName="autocomplete")
+    vi.mocked(api.reverseGeocode).mockResolvedValue({
       ResultItems: [
         {
-          SuggestResultItemType: "Place",
+          PlaceId: "locate-place-id",
           Title: "510 W Georgia St, Vancouver, BC",
-          Place: { PlaceId: "locate-place-id" },
+          Distance: 0,
+          PlaceType: "Street",
         },
       ],
       PricingBucket: "mock-pricing-bucket",
@@ -330,12 +332,12 @@ describe("AddressFormAddressField", () => {
       expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
     });
 
-    // Verify suggest was called with coordinates
+    // Verify reverseGeocode was called with coordinates (apiName="autocomplete" uses Core path)
     await waitFor(() => {
-      expect(api.suggest).toHaveBeenCalledWith(
+      expect(api.reverseGeocode).toHaveBeenCalledWith(
         expect.any(Object), // client
         expect.objectContaining({
-          BiasPosition: [-123.1207, 49.2827],
+          QueryPosition: [-123.1207, 49.2827],
           MaxResults: 1,
         }),
       );

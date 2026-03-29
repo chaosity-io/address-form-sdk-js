@@ -11,6 +11,7 @@ vi.mock("../../utils/api", () => ({
   getPlace: vi.fn(),
   autocomplete: vi.fn(),
   suggest: vi.fn(),
+  reverseGeocode: vi.fn(),
 }));
 
 vi.mock("../../utils/debounce", () => ({
@@ -516,12 +517,13 @@ describe("Typeahead Component", () => {
       configurable: true,
     });
 
-    vi.mocked(api.suggest).mockResolvedValue({
+    vi.mocked(api.reverseGeocode).mockResolvedValue({
       ResultItems: [
         {
-          SuggestResultItemType: "Place",
+          PlaceId: "current-location-place",
           Title: "Current Location Address",
-          Place: { PlaceId: "current-location-place" },
+          Distance: 0,
+          PlaceType: "Street",
         },
       ],
       PricingBucket: "bucket1",
