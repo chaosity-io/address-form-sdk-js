@@ -27,8 +27,7 @@
     "build:storybook": "storybook build",
     "test": "vitest run --coverage",
     "format": "prettier --write .",
-    "prepare": "husky",
-    "postversion": "git push --follow-tags"
+    "prepare": "husky"
   },
   "devDependencies": {
     "@chaosity/location-client": "^0.2.1",
