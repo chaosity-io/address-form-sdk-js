@@ -27,7 +27,7 @@ describe("autocompleteQuery", () => {
     client.ensureQueryData(query);
 
     expect(query.queryKey).toEqual(["autocomplete", input]);
-    expect(api.autocomplete).toBeCalledWith(geoPlacesClient, input);
+    expect(api.autocomplete).toBeCalledWith(geoPlacesClient, input, { signal: expect.any(AbortSignal) });
   });
 
   it("should use cached results in the second call", () => {
@@ -56,7 +56,7 @@ describe("suggestQuery", () => {
     client.ensureQueryData(query);
 
     expect(query.queryKey).toEqual(["suggest", input]);
-    expect(api.suggest).toBeCalledWith(geoPlacesClient, input);
+    expect(api.suggest).toBeCalledWith(geoPlacesClient, input, { signal: expect.any(AbortSignal) });
   });
 
   it("should use cached results in the second call", () => {
@@ -85,7 +85,7 @@ describe("getPlaceQuery", () => {
     client.ensureQueryData(query);
 
     expect(query.queryKey).toEqual(["getPlace", input]);
-    expect(api.getPlace).toBeCalledWith(geoPlacesClient, input);
+    expect(api.getPlace).toBeCalledWith(geoPlacesClient, input, { signal: expect.any(AbortSignal) });
   });
 
   it("should use cached results in the second call", () => {

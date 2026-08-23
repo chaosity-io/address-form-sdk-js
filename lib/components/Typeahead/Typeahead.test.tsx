@@ -192,6 +192,7 @@ describe("Typeahead Component", () => {
           PoliticalView: undefined,
           AdditionalFeatures: ["SecondaryAddresses"],
         },
+        { signal: expect.any(AbortSignal) },
       );
       expect(mockOnSelect).toHaveBeenCalledWith({
         placeId: "mock-place-id",

@@ -94,14 +94,22 @@ describe("LocateButton Component", () => {
 
     await waitFor(() => {
       expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
-      expect(api.suggest).toHaveBeenCalledWith(expect.any(Object), {
-        QueryText: "47.6062,-122.3321",
-        BiasPosition: [-122.3321, 47.6062],
-        MaxResults: 1,
-      });
-      expect(api.getPlace).toHaveBeenCalledWith(expect.any(Object), {
-        PlaceId: "test-place-id",
-      });
+      expect(api.suggest).toHaveBeenCalledWith(
+        expect.any(Object),
+        {
+          QueryText: "47.6062,-122.3321",
+          BiasPosition: [-122.3321, 47.6062],
+          MaxResults: 1,
+        },
+        { signal: expect.any(AbortSignal) },
+      );
+      expect(api.getPlace).toHaveBeenCalledWith(
+        expect.any(Object),
+        {
+          PlaceId: "test-place-id",
+        },
+        { signal: expect.any(AbortSignal) },
+      );
       expect(mockProps.onLocate).toHaveBeenCalledWith({
         placeId: "test-place-id",
         addressLineOneField: "123 Main St",

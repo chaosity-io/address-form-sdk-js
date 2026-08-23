@@ -1,5 +1,6 @@
-import type { AutocompleteCommandInput, GeoPlacesClient, SuggestCommandInput } from "@chaosity/location-client";
+import type { AutocompleteCommandInput, SuggestCommandInput } from "@chaosity/location-client";
 import { useQuery } from "@tanstack/react-query";
+import type { LocationClientLike } from "../../utils/api";
 import { autocomplete, suggest } from "../../utils/api";
 
 export type TypeaheadAPIName = "autocomplete" | "suggest";
@@ -7,7 +8,7 @@ export type TypeaheadAPIName = "autocomplete" | "suggest";
 export type TypeaheadAPIInput = Partial<AutocompleteCommandInput> | Partial<SuggestCommandInput>;
 
 export type UseTypeaheadParams = {
-  client: GeoPlacesClient;
+  client: LocationClientLike;
   apiName: TypeaheadAPIName;
   apiInput?: TypeaheadAPIInput;
   enabled: boolean;
@@ -43,7 +44,7 @@ export const useTypeaheadQuery = ({ client, apiName, apiInput, enabled }: UseTyp
 };
 
 const getAutocompleteResults = async (
-  client: GeoPlacesClient,
+  client: LocationClientLike,
   input: AutocompleteCommandInput,
 ): Promise<TypeaheadResultItem[]> => {
   const response = await autocomplete(client, input);
@@ -59,7 +60,7 @@ const getAutocompleteResults = async (
 };
 
 const getSuggestResults = async (
-  client: GeoPlacesClient,
+  client: LocationClientLike,
   input: SuggestCommandInput,
 ): Promise<TypeaheadResultItem[]> => {
   const response = await suggest(client, {

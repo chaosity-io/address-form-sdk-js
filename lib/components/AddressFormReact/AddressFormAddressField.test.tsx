@@ -219,6 +219,7 @@ describe("AddressFormAddressField", () => {
       expect(api.getPlace).toHaveBeenCalledWith(
         expect.any(Object), // client
         expect.objectContaining({ PlaceId: "test-place-id" }),
+        { signal: expect.any(AbortSignal) },
       );
     });
 
@@ -340,6 +341,7 @@ describe("AddressFormAddressField", () => {
           QueryPosition: [-123.1207, 49.2827],
           MaxResults: 1,
         }),
+        { signal: expect.any(AbortSignal) },
       );
     });
 
@@ -348,6 +350,7 @@ describe("AddressFormAddressField", () => {
       expect(api.getPlace).toHaveBeenCalledWith(
         expect.any(Object), // client
         expect.objectContaining({ PlaceId: "locate-place-id" }),
+        { signal: expect.any(AbortSignal) },
       );
     });
 
