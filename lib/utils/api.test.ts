@@ -34,7 +34,7 @@ describe("API", () => {
     it("should make an Autocomplete request and return the response", async () => {
       vi.mocked(client.send).mockResolvedValueOnce(mockResponse as unknown as void);
       const result = await autocomplete(client, mockInput);
-      expect(client.send).toHaveBeenCalledWith(expect.objectContaining({ input: mockInput }));
+      expect(client.send).toHaveBeenCalledWith(expect.objectContaining({ input: mockInput }), undefined);
       expect(result).toEqual(mockResponse);
     });
 
@@ -52,7 +52,7 @@ describe("API", () => {
     it("should make a Suggest request and return the response", async () => {
       vi.mocked(client.send).mockResolvedValueOnce(mockResponse as unknown as void);
       const result = await suggest(client, mockInput);
-      expect(client.send).toHaveBeenCalledWith(expect.objectContaining({ input: mockInput }));
+      expect(client.send).toHaveBeenCalledWith(expect.objectContaining({ input: mockInput }), undefined);
       expect(result).toEqual(mockResponse);
     });
 
@@ -70,7 +70,7 @@ describe("API", () => {
     it("should make a GetPlace request and return the response", async () => {
       vi.mocked(client.send).mockResolvedValueOnce(mockResponse as unknown as void);
       const result = await getPlace(client, mockInput);
-      expect(client.send).toHaveBeenCalledWith(expect.objectContaining({ input: mockInput }));
+      expect(client.send).toHaveBeenCalledWith(expect.objectContaining({ input: mockInput }), undefined);
       expect(result).toEqual(mockResponse);
     });
 

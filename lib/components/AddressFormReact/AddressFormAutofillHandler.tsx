@@ -1,9 +1,9 @@
-import type { GeoPlacesClient } from "@chaosity/location-client";
 import { GetPlaceAdditionalFeature } from "@chaosity/location-client";
 import type { QueryClient } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
 import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
+import type { LocationClientLike } from "../../utils/api";
 import type { AutofillValues } from "../../utils/detect-autofill";
 import { detectAutofill } from "../../utils/detect-autofill";
 import { autocompleteQuery, getPlaceQuery, suggestQuery } from "../../utils/queries";
@@ -106,7 +106,7 @@ const getValue = (values: AutofillValues, field: Field) => {
  */
 const getPlaceId = async (
   queryClient: QueryClient,
-  client: GeoPlacesClient,
+  client: LocationClientLike,
   query: string,
   apiName: TypeaheadAPIName,
   language?: string,

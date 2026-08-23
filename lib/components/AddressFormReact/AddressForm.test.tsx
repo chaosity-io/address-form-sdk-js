@@ -1,4 +1,4 @@
-import { GeoPlacesClient, GetPlaceIntendedUse } from "@chaosity/location-client";
+import { GetPlaceIntendedUse } from "@chaosity/location-client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { useContext, useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -154,7 +154,10 @@ describe("AddressForm", () => {
     const data = await getData({ intendedUse: GetPlaceIntendedUse.STORAGE });
 
     expect(data).toEqual({ placeId: "test-place-id" });
-    expect(api.getPlace).toHaveBeenCalledWith(expect.any(GeoPlacesClient), {
+    // Shape, not class identity: useLocationClient() returned a GeoPlacesClient
+    // instance up to client-react 0.2.x and returns a LocationClient interface
+    // from 0.3.0, so expect.any(GeoPlacesClient) no longer matches.
+    expect(api.getPlace).toHaveBeenCalledWith(expect.objectContaining({ send: expect.any(Function) }), {
       PlaceId: "test-place-id",
       IntendedUse: GetPlaceIntendedUse.STORAGE,
     });

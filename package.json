@@ -31,8 +31,8 @@
     "postversion": "git push --follow-tags"
   },
   "devDependencies": {
-    "@chaosity/location-client": "^0.1.0",
-    "@chaosity/location-client-react": "^0.1.0",
+    "@chaosity/location-client": "^0.2.1",
+    "@chaosity/location-client-react": "^0.3.0",
     "@eslint/js": "^10",
     "@storybook/react-vite": "^10",
     "@testing-library/dom": "^10.4.0",
