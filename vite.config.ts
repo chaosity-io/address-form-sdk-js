@@ -46,6 +46,18 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: "./lib/setup-tests.ts",
+
+    // 30 test files run in parallel against however many cores the machine has,
+    // and the heaviest AddressForm render crosses vitest's 5 s default under that
+    // contention — passing every time in isolation, failing intermittently in a
+    // full run. It blocked a release on 2026-08-23 and would have failed CI too,
+    // where runners have fewer cores than a dev machine.
+    //
+    // This changes no assertion: the tests check exactly what they checked. It
+    // stops a loaded machine being reported as a broken test. The real fix is to
+    // make that render cheaper, which is scoped in location-service-client#12.
+    testTimeout: 15_000,
+    hookTimeout: 15_000,
     server: {
       deps: {
         inline: ["@chaosity/location-client", "@chaosity/location-client-react"],
