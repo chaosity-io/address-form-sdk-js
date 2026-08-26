@@ -1,7 +1,7 @@
 {
   "name": "@chaosity/address-form",
   "description": "Address Form SDK for Chaosity Location Service",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "main": "./dist/lib/address-form-sdk.cjs.js",
   "types": "dist/lib/main.d.ts",
   "files": [
@@ -75,7 +75,7 @@
   },
   "peerDependencies": {
     "@chaosity/location-client": ">=0.3.0",
-    "@chaosity/location-client-react": ">=0.1.0",
+    "@chaosity/location-client-react": ">=0.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }
