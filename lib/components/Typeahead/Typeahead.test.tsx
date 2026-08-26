@@ -75,6 +75,9 @@ describe("Typeahead Component", () => {
       expect(api.autocomplete).toHaveBeenCalledWith(
         expect.any(Object), // client object
         expect.objectContaining({ QueryText: "test address", MaxResults: 5 }),
+        // React Query's AbortSignal, forwarded so a superseded keystroke is
+        // cancelled rather than billed and raced (#2 / T34).
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
       );
     });
   });
@@ -280,6 +283,7 @@ describe("Typeahead Component", () => {
         Language: "fr",
         MaxResults: 5,
       }),
+      expect.objectContaining({ signal: expect.any(AbortSignal) }),
     );
   });
 
@@ -315,6 +319,7 @@ describe("Typeahead Component", () => {
           BiasPosition: biasPosition,
           MaxResults: 5,
         }),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
       );
     });
   });

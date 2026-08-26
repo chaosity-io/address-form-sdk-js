@@ -74,7 +74,13 @@ describe("useTypeaheadQuery", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(api.autocomplete).toHaveBeenCalledWith(mockClient, { QueryText: "123" });
+      expect(api.autocomplete).toHaveBeenCalledWith(
+        mockClient,
+        { QueryText: "123" },
+        {
+          signal: expect.any(AbortSignal),
+        },
+      );
       expect(result.current.data).toEqual([{ placeId: "place-1", title: "123 Main St" }]);
     });
 
@@ -110,7 +116,11 @@ describe("useTypeaheadQuery", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(api.autocomplete).toHaveBeenCalledWith(mockClient, { QueryText: "test", MaxResults: 3 });
+      expect(api.autocomplete).toHaveBeenCalledWith(
+        mockClient,
+        { QueryText: "test", MaxResults: 3 },
+        { signal: expect.any(AbortSignal) },
+      );
       expect(result.current.data).toEqual([{ placeId: "place-2", title: "456 Oak Ave" }]);
     });
 
@@ -213,7 +223,11 @@ describe("useTypeaheadQuery", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(api.suggest).toHaveBeenCalledWith(mockClient, { QueryText: "rest", BiasPosition: [0, 0] });
+      expect(api.suggest).toHaveBeenCalledWith(
+        mockClient,
+        { QueryText: "rest", BiasPosition: [0, 0] },
+        { signal: expect.any(AbortSignal) },
+      );
       expect(result.current.data).toEqual([{ placeId: "place-1", title: "Restaurant ABC" }]);
     });
 
@@ -252,11 +266,15 @@ describe("useTypeaheadQuery", () => {
         expect(result.current.isSuccess).toBe(true);
       });
 
-      expect(api.suggest).toHaveBeenCalledWith(mockClient, {
-        QueryText: "hotel",
-        BiasPosition: [40.7128, -74.006],
-        MaxResults: 10,
-      });
+      expect(api.suggest).toHaveBeenCalledWith(
+        mockClient,
+        {
+          QueryText: "hotel",
+          BiasPosition: [40.7128, -74.006],
+          MaxResults: 10,
+        },
+        { signal: expect.any(AbortSignal) },
+      );
       expect(result.current.data).toEqual([{ placeId: "place-2", title: "Hotel XYZ" }]);
     });
 
@@ -438,6 +456,95 @@ describe("useTypeaheadQuery", () => {
 
       // Both should be different instances since they have different query keys
       expect(result1.current).not.toBe(result2.current);
+    });
+  });
+
+  describe("cancellation (#2 / T34)", () => {
+    /**
+     * The reason this hook needs the signal at all.
+     *
+     * A typeahead fires per keystroke. Without cancellation every superseded
+     * request runs to completion: the user pays for searches they have already
+     * typed past, and a slow early response can land AFTER a fast later one and
+     * overwrite the list with stale results.
+     */
+
+    it.each([
+      ["autocomplete", () => api.autocomplete],
+      ["suggest", () => api.suggest],
+    ])("forwards React Query's AbortSignal to %s", async (apiName, fn) => {
+      vi.mocked(fn()).mockResolvedValue({
+        ResultItems: [],
+        PricingBucket: "b",
+        $metadata: {},
+      } as never);
+
+      const { result } = renderHook(
+        () =>
+          useTypeaheadQuery({
+            client: mockClient,
+            apiName: apiName as TypeaheadAPIName,
+            apiInput: { QueryText: "syd" },
+            enabled: true,
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      const options = vi.mocked(fn()).mock.calls[0]?.[2];
+      expect(options?.signal).toBeInstanceOf(AbortSignal);
+    });
+
+    it("passes a signal that is not already aborted", async () => {
+      // A signal that arrives pre-aborted would cancel every first request —
+      // the failure mode of threading the wrong controller through.
+      vi.mocked(api.autocomplete).mockResolvedValue({
+        ResultItems: [],
+        PricingBucket: "b",
+        $metadata: {},
+      } as never);
+
+      const { result } = renderHook(
+        () =>
+          useTypeaheadQuery({
+            client: mockClient,
+            apiName: "autocomplete",
+            apiInput: { QueryText: "syd" },
+            enabled: true,
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      expect(vi.mocked(api.autocomplete).mock.calls[0]?.[2]?.signal?.aborted).toBe(false);
+    });
+
+    it("keeps the input untouched — the signal travels in options, not the request", async () => {
+      // Suggest still gets its BiasPosition default; the signal must not leak
+      // into the command input, where AWS would reject it.
+      vi.mocked(api.suggest).mockResolvedValue({
+        ResultItems: [],
+        PricingBucket: "b",
+        $metadata: {},
+      } as never);
+
+      const { result } = renderHook(
+        () =>
+          useTypeaheadQuery({
+            client: mockClient,
+            apiName: "suggest",
+            apiInput: { QueryText: "syd" },
+            enabled: true,
+          }),
+        { wrapper: createWrapper() },
+      );
+
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+
+      const [, input] = vi.mocked(api.suggest).mock.calls[0]!;
+      expect(input).toEqual({ QueryText: "syd", BiasPosition: [0, 0] });
+      expect(input).not.toHaveProperty("signal");
     });
   });
 });
