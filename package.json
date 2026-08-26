@@ -75,7 +75,7 @@
   },
   "peerDependencies": {
     "@chaosity/location-client": ">=0.3.0",
-    "@chaosity/location-client-react": ">=0.1.0",
+    "@chaosity/location-client-react": ">=0.2.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }
