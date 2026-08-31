@@ -19,7 +19,7 @@ const meta = {
   args: {
     // AddressForm Props
     onSubmit: async (getData: any) => {
-      const data = await getData({ intendedUse: "SingleUse" });
+      const data = await getData();
       action("onSubmit")(data);
     },
     language: undefined,
@@ -61,8 +61,7 @@ const meta = {
   argTypes: {
     onSubmit: {
       type: "function",
-      description:
-        "Callback function that receives a getData async function for retrieving form data with intendedUse parameter",
+      description: "Callback function that receives a getData async function for retrieving the captured form data",
       table: {
         category: "AddressForm",
       },

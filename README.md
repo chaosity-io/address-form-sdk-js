@@ -56,7 +56,7 @@ export default function App() {
     <LocationClientProvider getConfig={getConfig}>
       <AddressForm
         onSubmit={async (getData) => {
-          const data = await getData({ intendedUse: "SingleUse" });
+          const data = await getData();
           console.log(data);
         }}
       >
@@ -128,7 +128,7 @@ export default function App() {
           return res.json(); // { apiUrl, token, expiresAt }
         },
         onSubmit: async (getData) => {
-          const data = await getData({ intendedUse: "SingleUse" });
+          const data = await getData();
           console.log(data);
         },
       });
@@ -153,41 +153,44 @@ Main component wrapping the address form.
 
 #### Props
 
-| Property                        | Type                            | Required | Default | Description                                                                                                       |
-| ------------------------------- | ------------------------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
-| `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag) for localized suggestions (e.g., `"en"`, `"es"`) |
-| `politicalView`                 | `string`                        | No       | -       | Political view for disputed territory display                                                                     |
-| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limit suggestions to the selected country                                                                         |
-| `allowedCountries`              | `string[]`                      | No       | -       | ISO alpha-2 or alpha-3 country codes to restrict suggestions                                                      |
-| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Filter results by place type (e.g., `"Locality"`, `"PostalCode"`)                                                 |
-| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as `[longitude, latitude]`                                                                     |
-| `initialMapZoom`                | `number`                        | No       | Varies  | Initial zoom level (default: 10 with center, 5 with single country, 1 otherwise)                                  |
-| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback receiving an async `getData` function to retrieve form data with `intendedUse` parameter                 |
+| Property                        | Type                            | Required | Default | Description                                                                                                                              |
+| ------------------------------- | ------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag) for localized suggestions (e.g., `"en"`, `"es"`)                        |
+| `politicalView`                 | `string`                        | No       | -       | Political view for disputed territory display                                                                                            |
+| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limit suggestions to the selected country                                                                                                |
+| `allowedCountries`              | `string[]`                      | No       | -       | ISO 3166-1 **alpha-2** country codes to restrict suggestions. An application that has a country scope refuses alpha-3 (`AUS`) with a 400 |
+| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Filter results by place type (e.g., `"Locality"`, `"PostalCode"`)                                                                        |
+| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as `[longitude, latitude]`                                                                                            |
+| `initialMapZoom`                | `number`                        | No       | Varies  | Initial zoom level (default: 10 with center, 5 with single country, 1 otherwise)                                                         |
+| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback receiving an async `getData` function that resolves the captured form data                                                      |
 
 #### Form Submission Data
 
 ```javascript
 onSubmit: async (getData) => {
-  const data = await getData({
-    intendedUse: "SingleUse", // or "Storage"
-  });
+  const data = await getData();
 };
 ```
 
-Use `"Storage"` if you plan to store or cache the results.
+> **Changed in 0.4.0** — `getData` no longer takes an `intendedUse` argument.
+> Passing `"Storage"` used to issue a second, separately billed `GetPlace` for
+> the same place. The Location Service never forwards `IntendedUse`, so that
+> call returned identical data and granted no storage rights — it only charged
+> you twice. Call `getData()` with no arguments.
 
-| Property           | Type      | Description                                                              |
-| ------------------ | --------- | ------------------------------------------------------------------------ |
-| `placeId`          | `string`  | Place ID (present when address selected from typeahead or locate button) |
-| `addressLineOne`   | `string`  | Primary address line (street address)                                    |
-| `addressLineTwo`   | `string`  | Secondary address line (apartment, suite, etc.)                          |
-| `city`             | `string`  | City name                                                                |
-| `province`         | `string`  | State or province                                                        |
-| `postalCode`       | `string`  | Postal or ZIP code                                                       |
-| `country`          | `string`  | Country code (ISO 3166-1 alpha-2)                                        |
-| `originalPosition` | `string`  | Original coordinates from API (`longitude,latitude`)                     |
-| `adjustedPosition` | `string`  | User-adjusted coordinates if map pin was moved (`longitude,latitude`)    |
-| `addressDetails`   | `Address` | Full address object from the GetPlace API response                       |
+| Property             | Type             | Description                                                              |
+| -------------------- | ---------------- | ------------------------------------------------------------------------ |
+| `placeId`            | `string`         | Place ID (present when address selected from typeahead or locate button) |
+| `addressLineOne`     | `string`         | Primary address line (street address)                                    |
+| `addressLineTwo`     | `string`         | Secondary address line (apartment, suite, etc.)                          |
+| `city`               | `string`         | City name                                                                |
+| `province`           | `string`         | State or province                                                        |
+| `postalCode`         | `string`         | Postal or ZIP code                                                       |
+| `country`            | `string`         | Country code (ISO 3166-1 alpha-2)                                        |
+| `originalPosition`   | `string`         | Original coordinates from API (`longitude,latitude`)                     |
+| `adjustedPosition`   | `string`         | User-adjusted coordinates if map pin was moved (`longitude,latitude`)    |
+| `addressDetails`     | `Address`        | Full address object from the GetPlace API response                       |
+| `secondaryAddresses` | `RelatedPlace[]` | Sub-addresses (units, suites) returned for the selected place            |
 
 ### Form Input Fields
 
@@ -253,10 +256,10 @@ For deeper debugging of token refresh and API calls, enable debug logging on the
 
 ```bash
 # Browser console
-localStorage.debug = 'chaosity:*'
+localStorage.debug = 'location-client:*,location-client-react:*'
 
 # Node.js
-DEBUG=chaosity:* node app.js
+DEBUG='location-client:*,location-client-react:*' node app.js
 ```
 
 ## TypeScript Support

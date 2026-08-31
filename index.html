@@ -37,7 +37,7 @@
         apiKey: import.meta.env.VITE_APP_API_KEY,
         region: import.meta.env.VITE_APP_REGION,
         onSubmit: async (getData) => {
-          const data = await getData({ intendedUse: "SingleUse" });
+          const data = await getData();
           console.log(data);
         },
       });

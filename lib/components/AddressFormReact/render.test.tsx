@@ -1,7 +1,15 @@
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useNotificationStore } from "../../stores/notificationStore";
+import * as api from "../../utils/api";
 import { render } from "./render";
+
+vi.mock("../../utils/api", async (importOriginal) => {
+  // eslint-disable-next-line @typescript-eslint/consistent-type-imports
+  const actual = await importOriginal<typeof import("../../utils/api")>();
+  return { ...actual, autocomplete: vi.fn(), getPlace: vi.fn() };
+});
 
 const mockGetConfig = async () => ({
   apiUrl: "https://test-api.chaosity.cloud",
@@ -13,6 +21,7 @@ describe("render", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
     useNotificationStore.getState().clearNotifications();
+    vi.clearAllMocks();
   });
 
   it("should throw error when form is not found", () => {
@@ -229,5 +238,86 @@ describe("render", () => {
     await waitFor(() => {
       expect(screen.getByText("Test notification message")).toBeInTheDocument();
     });
+  });
+
+  it("submitting does not issue a second GetPlace (#13)", async () => {
+    vi.mocked(api.autocomplete).mockResolvedValue({
+      ResultItems: [
+        {
+          PlaceId: "standalone-place-1",
+          Title: "1 Queen St",
+          Address: { Label: "1 Queen St" },
+          PlaceType: "Street",
+        },
+      ],
+      PricingBucket: "Core",
+      $metadata: {},
+    });
+    vi.mocked(api.getPlace).mockResolvedValue({
+      PlaceId: "standalone-place-1",
+      PlaceType: "Street",
+      Title: "1 Queen St",
+      PricingBucket: "Core",
+      Address: {
+        Label: "1 Queen St, Brisbane City QLD 4000",
+        Country: { Code2: "AU", Name: "Australia" },
+        Region: { Code: "QLD", Name: "Queensland" },
+        Locality: "Brisbane City",
+        PostalCode: "4000",
+        AddressNumber: "1",
+        Street: "Queen St",
+      },
+      Position: [153.026, -27.4705],
+      $metadata: {},
+    });
+
+    document.body.innerHTML = `
+      <form id="address-form">
+        <input data-type="address-form" name="addressLineOne" />
+        <button data-type="address-form" type="submit">Submit</button>
+      </form>
+    `;
+
+    const onSubmit = vi.fn();
+
+    act(() => {
+      render({
+        root: "#address-form",
+        getConfig: mockGetConfig,
+        onSubmit,
+      });
+    });
+
+    // Select a suggestion — this is the ONE legitimate GetPlace, and it is what
+    // puts a placeId in the form data. Without it the assertion below would pass
+    // even with the bug present, because the removed call was placeId-gated.
+    const input = await screen.findByRole("combobox");
+    fireEvent.change(input, { target: { value: "Queen St" } });
+
+    // The typeahead debounces 1000ms, which is exactly waitFor's default timeout.
+    await waitFor(
+      () => {
+        expect(screen.getByText("1 Queen St")).toBeInTheDocument();
+      },
+      { timeout: 5000 },
+    );
+    await userEvent.selectOptions(screen.getByRole("listbox"), screen.getByRole("option", { name: "1 Queen St" }));
+
+    await waitFor(() => {
+      expect(api.getPlace).toHaveBeenCalledTimes(1);
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    await waitFor(() => {
+      expect(onSubmit).toHaveBeenCalled();
+    });
+
+    const data = await onSubmit.mock.calls[0][0]();
+    expect(data.placeId).toBe("standalone-place-1");
+
+    // Still one. The standalone path used to issue a second, separately billed
+    // GetPlace here with IntendedUse: "Storage".
+    expect(api.getPlace).toHaveBeenCalledTimes(1);
   });
 });
