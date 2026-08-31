@@ -36,8 +36,8 @@ clients are declared as **peer** dependencies with a deliberately wide range:
 
 ```json
 "peerDependencies": {
-  "@chaosity/location-client": ">=0.1.0",
-  "@chaosity/location-client-react": ">=0.1.0"
+  "@chaosity/location-client": ">=0.3.0",
+  "@chaosity/location-client-react": ">=0.2.0"
 }
 ```
 

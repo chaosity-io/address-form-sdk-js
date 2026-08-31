@@ -1,10 +1,8 @@
 import type { Address, AutocompleteFilterPlaceType } from "@chaosity/location-client";
-import { type GetPlaceIntendedUse, type RelatedPlace } from "@chaosity/location-client";
+import { type RelatedPlace } from "@chaosity/location-client";
 import clsx from "clsx";
 import type { ComponentProps, FormEventHandler, FunctionComponent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
-import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
-import { getPlace } from "../../utils/api";
 import { NotificationContainer } from "../Notification";
 import type { AddressFormAddressFieldProps } from "./AddressFormAddressField";
 import { AddressFormAddressField } from "./AddressFormAddressField";
@@ -77,9 +75,7 @@ export const AddressForm: FunctionComponent<AddressFormProps> & ChildComponents 
   );
 };
 
-export type SubmitHandler = (
-  getData: (options: { intendedUse: GetPlaceIntendedUse }) => Promise<AddressFormData>,
-) => void;
+export type SubmitHandler = (getData: () => Promise<AddressFormData>) => void;
 
 interface AddressFormContentProps extends Omit<ComponentProps<"form">, "onSubmit"> {
   onSubmit?: SubmitHandler;
@@ -89,7 +85,6 @@ interface AddressFormContentProps extends Omit<ComponentProps<"form">, "onSubmit
 
 const AddressFormContent: FunctionComponent<AddressFormContentProps> = ({ children, className, onSubmit, ...rest }) => {
   const { data, resetData } = useAddressFormContext();
-  const { client } = useAmazonLocationContext();
   const formRef = useRef<HTMLFormElement>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -100,16 +95,12 @@ const AddressFormContent: FunctionComponent<AddressFormContentProps> = ({ childr
   const handleSubmit: FormEventHandler = (event) => {
     event.preventDefault();
 
-    onSubmit?.(async ({ intendedUse }) => {
-      // If the user is going to store the results (even for caching purposes),
-      // we must make another API call for the same place with the storage option.
-      // See: https://docs.aws.amazon.com/location/latest/developerguide/places-intended-use.html
-      if (intendedUse === "Storage" && data.placeId) {
-        await getPlace(client, { PlaceId: data.placeId, IntendedUse: intendedUse });
-      }
-
-      return data;
-    });
+    // Deliberately no second GetPlace. One used to be issued here with
+    // IntendedUse: "Storage", but IntendedUse is one of the parameters the
+    // Location Service never forwards, so that call returned byte-identical
+    // data, granted no storage rights, and billed the customer a second time.
+    // Do not reintroduce it (#13).
+    onSubmit?.(async () => data);
   };
 
   return (

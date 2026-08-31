@@ -4,8 +4,6 @@ import type { FunctionComponent } from "react";
 import { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { createRoot } from "react-dom/client";
-import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
-import { getPlace } from "../../utils/api";
 import { Button } from "../Button";
 import { ComponentInjector } from "../ComponentInjector";
 import type { ColorScheme, MapStyle, MapStyleType } from "../Map";
@@ -178,7 +176,6 @@ const FormEventHandler: FunctionComponent<{
   onSubmit?: SubmitHandler;
 }> = ({ selector, onSubmit }) => {
   const { data, setData, resetData } = useAddressFormContext();
-  const { client } = useAmazonLocationContext();
 
   useEffect(() => {
     const form = document.querySelector(selector) as HTMLFormElement;
@@ -187,16 +184,8 @@ const FormEventHandler: FunctionComponent<{
     const handleSubmit = (event: Event) => {
       event.preventDefault();
 
-      onSubmit?.(async ({ intendedUse }) => {
-        // If the user is going to store the results (even for caching purposes),
-        // we must make another API call for the same place with the storage option.
-        // See: https://docs.aws.amazon.com/location/latest/developerguide/places-intended-use.html
-        if (intendedUse === "Storage" && data.placeId) {
-          await getPlace(client, { PlaceId: data.placeId, IntendedUse: intendedUse });
-        }
-
-        return data;
-      });
+      // Deliberately no second GetPlace — see the note in AddressForm.tsx (#13).
+      onSubmit?.(async () => data);
     };
 
     const handleReset = () => {
@@ -210,7 +199,7 @@ const FormEventHandler: FunctionComponent<{
       form.removeEventListener("submit", handleSubmit);
       form.removeEventListener("reset", handleReset);
     };
-  }, [selector, data, setData, resetData, onSubmit, client]);
+  }, [selector, data, setData, resetData, onSubmit]);
 
   return null;
 };

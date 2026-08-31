@@ -1,4 +1,3 @@
-import { GetPlaceIntendedUse } from "@chaosity/location-client";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import { useContext, useEffect } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -118,52 +117,7 @@ describe("AddressForm", () => {
     expect(postalCode).toHaveValue("");
   });
 
-  it("calls getPlace with STORAGE intendedUse when getData is called with STORAGE", async () => {
-    const mockOnSubmit = vi.fn();
-
-    const TestForm = () => {
-      const { setData } = useAddressFormContext();
-
-      useEffect(() => {
-        setData({ placeId: "test-place-id" });
-      }, []);
-
-      return (
-        <button data-type="address-form" type="submit">
-          Submit
-        </button>
-      );
-    };
-
-    const { getByRole } = renderWithProvider(
-      <AddressForm onSubmit={mockOnSubmit}>
-        <TestForm />
-      </AddressForm>,
-    );
-
-    // Wait for LocationClientProvider async init so client is available
-    await act(async () => {});
-
-    fireEvent.click(getByRole("button", { name: "Submit" }));
-
-    await waitFor(() => {
-      expect(mockOnSubmit).toHaveBeenCalled();
-    });
-
-    const getData = mockOnSubmit.mock.calls[0][0];
-    const data = await getData({ intendedUse: GetPlaceIntendedUse.STORAGE });
-
-    expect(data).toEqual({ placeId: "test-place-id" });
-    // Shape, not class identity: useLocationClient() returned a GeoPlacesClient
-    // instance up to client-react 0.2.x and returns a LocationClient interface
-    // from 0.3.0, so expect.any(GeoPlacesClient) no longer matches.
-    expect(api.getPlace).toHaveBeenCalledWith(expect.objectContaining({ send: expect.any(Function) }), {
-      PlaceId: "test-place-id",
-      IntendedUse: GetPlaceIntendedUse.STORAGE,
-    });
-  });
-
-  it("does not call getPlace when getData is called without STORAGE intendedUse", async () => {
+  it("getData returns the form data without issuing a second GetPlace (#13)", async () => {
     vi.clearAllMocks();
     const mockOnSubmit = vi.fn();
 
@@ -187,6 +141,9 @@ describe("AddressForm", () => {
       </AddressForm>,
     );
 
+    // Flush TestForm's setData effect so the form data is populated before submit
+    await act(async () => {});
+
     fireEvent.click(getByRole("button", { name: "Submit" }));
 
     await waitFor(() => {
@@ -194,9 +151,12 @@ describe("AddressForm", () => {
     });
 
     const getData = mockOnSubmit.mock.calls[0][0];
-    const data = await getData({ intendedUse: GetPlaceIntendedUse.SINGLE_USE });
+    const data = await getData();
 
     expect(data).toEqual({ placeId: "test-place-id" });
+    // The form used to issue a second GetPlace with IntendedUse: "Storage".
+    // The API strips IntendedUse, so that call returned identical data, granted
+    // no storage rights, and billed the customer twice. It must stay gone.
     expect(api.getPlace).not.toHaveBeenCalled();
   });
 

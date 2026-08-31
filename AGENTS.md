@@ -61,6 +61,17 @@ supported surface. Consumers want `AddressForm` from
 `./components/AddressFormReact`. Do not document the `__` names, and do not
 treat a change to them as breaking.
 
+## `IntendedUse` is not ours to send
+
+The Location Service decides the AWS pricing bucket; it never forwards
+`IntendedUse` (or `Key`) to Amazon Location. A request carrying
+`IntendedUse: "Storage"` is answered exactly as one without it, and the service
+caches both under the same entry — so issuing a second lookup "for storage
+rights" buys nothing and is billed as a second request.
+
+This form used to do precisely that on submit. It was removed in 0.4.0 along
+with `getData`'s `intendedUse` argument. Do not reintroduce either.
+
 ## Version floors that exist for a reason
 
 **`@headlessui/react` must stay at or above `2.2.10`.** Versions up to `2.2.9`
