@@ -14,7 +14,7 @@ a standalone bundle for pages that are not React apps.
 ```bash
 npm run dev              # vite dev server
 npm run storybook        # Storybook on :6006
-npm test                 # vitest run --coverage — 237 tests across 31 files
+npm test                 # vitest run --coverage
 npm run build            # BOTH builds: lib, then standalone
 npm run build:lib        # tsc -b && vite build
 npm run build:standalone # tsc -b && vite build --config vite.config.standalone.ts
