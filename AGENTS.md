@@ -103,6 +103,39 @@ This package is itself `0.x`, so **its own breaking changes go in the MINOR** �
 `^0.3.0` will never resolve `0.4.0`, and that is the only signal a consumer
 gets.
 
+### The devDependencies are moved by hand — and the standalone bundle ships them
+
+`devDependencies` pins both packages with an ordinary caret, and a caret on a
+`0.x` version never crosses the minor. So while the peer ranges let every
+consumer install the newest releases, this repo builds and tests against
+whichever minors the carets were last moved to, and nothing moves them for you
+(#20).
+
+Here that is not only a development concern. `vite.config.standalone.ts` has no
+`external` — the standalone bundle must be self-contained — so
+`dist/standalone/address-form-sdk.umd.js` **contains whatever `@chaosity`
+versions the lockfile installed**, and every page that calls `render()` runs
+those, whatever it installs itself. (The library build externalises both, so a
+React consumer's own versions are the ones used there.)
+
+So before a release, and whenever either upstream package ships a minor:
+
+```bash
+npm ci                                                                    # npm outdated reads the installed tree; without one it reports nothing
+npm outdated @chaosity/location-client @chaosity/location-client-react   # Wanted ≠ Latest: the range cannot reach the release
+npm install -D @chaosity/location-client@latest @chaosity/location-client-react@latest   # writes ^<latest> — `-D`, or they land in dependencies
+rm -rf node_modules && npm ci                                             # the lockfile proof
+```
+
+At a release, `RELEASING.md` has the order, including the commit `npm version`
+needs.
+
+Always move the two together. A client-react old enough to declare the client
+as a `dependency` rather than a peer (0.3.x did) installs its own nested copy,
+and the standalone bundle then carries two clients. Count them with
+`grep -o 'location-client:api' dist/standalone/address-form-sdk.umd.js | wc -l`
+— one per client copy, since each registers its own debug namespace.
+
 ## Conventions
 
 - Styling is **vanilla-extract** (`.css.ts`), compiled at build time. Do not add

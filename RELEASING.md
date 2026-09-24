@@ -31,8 +31,8 @@ git push --delete origin v0.2.4 && git tag -d v0.2.4
 
 `@chaosity/location-client` → `@chaosity/location-client-react` → this package.
 
-The reason here is **not** the caret trap that governs the two client repos. Both
-clients are declared as **peer** dependencies with a deliberately wide range:
+Both clients are declared twice. The **peer** ranges are deliberately wide, so a
+client minor never strands a consumer, and they do not move on a release:
 
 ```json
 "peerDependencies": {
@@ -41,16 +41,34 @@ clients are declared as **peer** dependencies with a deliberately wide range:
 }
 ```
 
-So a client minor does not strand this package's range, and releasing here does
-not require a dependency bump. What it does require is that the code still
-_works_ against the new client — a wide peer range is a promise, and nothing
-enforces it but this repo's tests. When client-react 0.3.0 changed the context
-type and removed `refreshBuffer`, `lib/utils/api.ts` needed a structural
-`LocationClientLike` type to accept both majors. That is the kind of breakage the
-order exists to catch.
+The **devDependencies** are the other half, and the caret trap does govern them:
+ordinary carets, and a caret on a `0.x` version never crosses the minor. They
+decide what this repo builds and tests against, and what the standalone bundle
+**ships** — `vite.config.standalone.ts` bundles the installed clients (see
+`AGENTS.md`). A release whose devDependencies lag publishes a standalone bundle
+that runs the old clients, whatever its host installs (#20). `npm install` alone
+will not move them: it resolves the caret, which is the thing that cannot reach.
 
-So: release the clients, wait for them to appear on npm, install them here, run
-the suite, and only then release this package.
+A wide peer range is also a promise that nothing enforces but this repo's tests.
+When client-react 0.3.0 changed the context type and removed `refreshBuffer`,
+`lib/utils/api.ts` needed a structural `LocationClientLike` type to accept both
+0.2.x and 0.3.x — on `0.x` a minor is the breaking unit. That is the kind of
+breakage the order exists to catch.
+
+So: release the clients and wait for them to appear on npm. Then, on the release
+branch here, move the two together and commit them **before** `npm version`,
+which refuses a dirty tree:
+
+```bash
+npm ci                                                                    # npm outdated reads the installed tree; without one it reports nothing
+npm outdated @chaosity/location-client @chaosity/location-client-react   # Wanted ≠ Latest: that range cannot reach the release
+npm install -D @chaosity/location-client@latest @chaosity/location-client-react@latest   # writes ^<latest>
+rm -rf node_modules && npm ci                                             # the lockfile proof — then the full gate
+git commit package.json package-lock.json -m "Move the @chaosity devDependencies to their latest releases"
+npm version <type>
+```
+
+Only then release this package — the range bump in the same PR as the version.
 
 ## The tag records the release; it does not cause it
 
