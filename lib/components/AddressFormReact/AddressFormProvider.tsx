@@ -11,6 +11,10 @@ import { AddressFormContext } from "./AddressFormContext";
 
 export interface AddressFormProps extends PropsWithChildren {
   language?: string;
+  /**
+   * Political view for address suggestions. Open to every plan — unlike the
+   * map's own `politicalView` on `AddressForm.Map`, which is a plan feature.
+   */
   politicalView?: string;
   showCurrentCountryResultsOnly?: boolean;
   allowedCountries?: string[];

@@ -65,6 +65,11 @@ export interface AddressFormProps {
   >;
   className?: string;
   language?: string;
+  /**
+   * Political view for address suggestions AND for the map's style. On the
+   * map it needs the `political-view` feature of the application's plan, so
+   * on a plan without it the map is refused while the suggestions are not.
+   */
   politicalView?: string;
 }
 

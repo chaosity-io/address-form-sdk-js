@@ -34,6 +34,10 @@ export interface AddressFormData {
 
 export interface AddressFormProps extends AddressFormContentProps {
   language?: string;
+  /**
+   * Political view for address suggestions. Open to every plan — unlike the
+   * map's own `politicalView` on `AddressForm.Map`, which is a plan feature.
+   */
   politicalView?: string;
   showCurrentCountryResultsOnly?: boolean;
   allowedCountries?: string[];

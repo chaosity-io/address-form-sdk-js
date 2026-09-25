@@ -9,6 +9,15 @@ import { getColorScheme, getMapStyleType } from "./utils";
 
 export type ColorScheme = "Light" | "Dark";
 
+/**
+ * A map style. `Hybrid` and `Satellite` need the `satellite` feature of the
+ * application's plan: without it the service refuses the style (403
+ * `FeatureNotEntitledException`) and the map stays blank. Inside
+ * `AddressForm.Map` the refusal is shown, naming the feature; a bare `Map`
+ * shows nothing beyond MapLibre's own console error. `Standard` and
+ * `Monochrome` are open to every plan.
+ * Which plans include it: https://chaosity.cloud/pricing.
+ */
 export type MapStyleType = "Standard" | "Monochrome" | "Hybrid" | "Satellite";
 
 type ExtendedMapStyle =
@@ -21,6 +30,13 @@ export { type ExtendedMapStyle as MapStyle };
 export interface MapProps extends Omit<MapLibreMapProps, "mapStyle"> {
   mapStyle: ExtendedMapStyle;
   apiUrl?: string;
+  /**
+   * A country's view of disputed borders on the MAP (ISO 3166-1 alpha-3, e.g.
+   * `"IND"`). Needs the `political-view` feature of the application's plan;
+   * without it the style is refused and the map stays blank. Not the form's
+   * own `politicalView`, which shapes address suggestions and is open to every
+   * plan.
+   */
   politicalView?: string;
   showNavigationControl?: boolean;
 }
