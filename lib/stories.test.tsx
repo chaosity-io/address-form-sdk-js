@@ -33,6 +33,7 @@ vi.mock("../lib/utils/api", async (orig) => ({
   suggest: vi.fn().mockResolvedValue({ ResultItems: [] }),
   getPlace: vi.fn().mockResolvedValue({}),
   reverseGeocode: vi.fn().mockResolvedValue({ ResultItems: [] }),
+  verifyAddress: vi.fn().mockResolvedValue({ verified: true }),
 }));
 
 // `*.stories.*` rather than an extglob: Vite's import.meta.glob does not

@@ -1,4 +1,4 @@
-import type { Address, AutocompleteFilterPlaceType } from "@chaosity/location-client";
+import type { Address, AutocompleteFilterPlaceType, VerifyAddressResponse } from "@chaosity/location-client";
 import { type RelatedPlace } from "@chaosity/location-client";
 import clsx from "clsx";
 import type { ComponentProps, FormEventHandler, FunctionComponent, ReactNode } from "react";
@@ -17,8 +17,10 @@ import { AddressFormProvider } from "./AddressFormProvider";
 import type { AddressFormTextFieldProps } from "./AddressFormTextField";
 import { AddressFormTextField } from "./AddressFormTextField";
 import * as styles from "./styles.css";
+import { useGetData } from "./use-get-data";
 
 export interface AddressFormData {
+  /** The PlaceId of the last pick. Not cleared when the fields are edited afterwards. */
   placeId?: string;
   addressLineOne?: string;
   addressLineTwo?: string;
@@ -30,9 +32,27 @@ export interface AddressFormData {
   adjustedPosition?: string;
   addressDetails?: Address;
   secondaryAddresses?: RelatedPlace[];
+  /**
+   * With `verify` on: whether the service verified the chosen PlaceId (#21).
+   * Absent when there was nothing to verify — no pick, or a picked field
+   * edited by hand since.
+   */
+  verified?: boolean;
+  /**
+   * With `verify` on: the service's whole answer — the place record plus
+   * `verified`. The one Places result you may store, except a place in Japan.
+   */
+  verification?: VerifyAddressResponse;
 }
 
 export interface AddressFormProps extends AddressFormContentProps {
+  /**
+   * Resolve the chosen PlaceId through `POST /address/verify` when `getData()`
+   * is called, so it returns `verified` and a result you may store (#21). Off by
+   * default: each verification is billed, whether or not the address verifies.
+   * Needs @chaosity/location-client 0.10.0 or later.
+   */
+  verify?: boolean;
   language?: string;
   /**
    * Political view for address suggestions. Open to every plan — unlike the
@@ -55,6 +75,7 @@ interface ChildComponents {
 
 export const AddressForm: FunctionComponent<AddressFormProps> & ChildComponents = ({
   children,
+  verify,
   language,
   politicalView,
   showCurrentCountryResultsOnly,
@@ -66,6 +87,7 @@ export const AddressForm: FunctionComponent<AddressFormProps> & ChildComponents 
 }) => {
   return (
     <AddressFormProvider
+      verify={verify}
       language={language}
       politicalView={politicalView}
       showCurrentCountryResultsOnly={showCurrentCountryResultsOnly}
@@ -88,7 +110,8 @@ interface AddressFormContentProps extends Omit<ComponentProps<"form">, "onSubmit
 }
 
 const AddressFormContent: FunctionComponent<AddressFormContentProps> = ({ children, className, onSubmit, ...rest }) => {
-  const { data, resetData } = useAddressFormContext();
+  const { resetData } = useAddressFormContext();
+  const getData = useGetData();
   const formRef = useRef<HTMLFormElement>(null);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -103,8 +126,9 @@ const AddressFormContent: FunctionComponent<AddressFormContentProps> = ({ childr
     // IntendedUse: "Storage", but IntendedUse is one of the parameters the
     // Location Service never forwards, so that call returned byte-identical
     // data, granted no storage rights, and billed the customer a second time.
-    // Do not reintroduce it (#13).
-    onSubmit?.(async () => data);
+    // Do not reintroduce it (#13). The storable path is `verify` (#21), and it
+    // calls only when the integrator asks for the data.
+    onSubmit?.(getData);
   };
 
   return (

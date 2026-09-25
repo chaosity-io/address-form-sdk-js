@@ -61,16 +61,46 @@ supported surface. Consumers want `AddressForm` from
 `./components/AddressFormReact`. Do not document the `__` names, and do not
 treat a change to them as breaking.
 
-## `IntendedUse` is not ours to send
+## Keeping an address is `verify`, never `IntendedUse`
 
 The Location Service decides the AWS pricing bucket; it never forwards
 `IntendedUse` (or `Key`) to Amazon Location. A request carrying
-`IntendedUse: "Storage"` is answered exactly as one without it, and the service
-caches both under the same entry — so issuing a second lookup "for storage
-rights" buys nothing and is billed as a second request.
+`IntendedUse: "Storage"` is answered exactly as one without it, so a second
+lookup "for storage rights" buys nothing and is billed as a second request.
+This form used to make exactly that lookup on submit. It was removed in 0.4.0,
+along with `getData`'s `intendedUse` argument. Do not reintroduce either.
 
-This form used to do precisely that on submit. It was removed in 0.4.0 along
-with `getData`'s `intendedUse` argument. Do not reintroduce either.
+The storable path is address verification (#21). With `verify` on, `getData()`
+sends the chosen PlaceId to `POST /address/verify` as a `VerifyAddressCommand`
+through the provider's `send`, and returns `verified` plus `verification`.
+`verification` is the one Places result an integrator may store. The service
+sets the storage terms itself, so the request carries the PlaceId and nothing
+else. `lib/components/AddressFormReact/use-get-data.ts` is the one place that
+calls it, and both submit sites (`AddressForm.tsx`, `render.tsx`) use it.
+Three rules there cost money or correctness if broken:
+
+- **Once per PlaceId per form.** Every verify is billed, whether or not the
+  address verifies. A failure is not kept.
+- **Only while the form still reads what set the PlaceId.** The provider
+  snapshots the picked fields whenever `placeId` is written: by a pick, or by
+  the autofill handler resolving the browser's text to its best match (the
+  place the map pin and `addressDetails` already show). A hand edit of those
+  fields afterwards means no call: the PlaceId no longer describes what is
+  being submitted.
+- **Never while typing.** The call is made in `getData()`, which the
+  integrator calls.
+
+`placeId` is the PlaceId that was chosen and sent, never the one a GetPlace
+response carries: `buildOutput` in the Typeahead takes it as an argument, and
+the locate button and the autofill handler keep the one they looked up. Asked
+for a unit, Amazon answers with a different PlaceId that every Places route
+then fails upstream (a 502, measured 25 Sep 2026). Recording the response's id
+made every unit's verification fail. `lib/components/Typeahead/chosen-place-id.test.tsx`
+holds the three pick paths to it, and `verify.test.tsx` the autofill one.
+
+It needs `@chaosity/location-client` 0.10.0 or later, the release that added
+the command. Any supported `@chaosity/location-client-react` works, because it
+goes through `send`.
 
 ## Version floors that exist for a reason
 
@@ -87,13 +117,21 @@ on a cold load and will not reproduce locally in a warm dev server.
 ## Peer ranges are open on purpose
 
 ```json
-"@chaosity/location-client": ">=0.3.0",
+"@chaosity/location-client": ">=0.10.0",
 "@chaosity/location-client-react": ">=0.2.0"
 ```
 
 `>=`, not `^`. Both of those are pre-1.0, and npm treats each `0.x` minor as
 incompatible — a caret range would refuse every upstream release after the
 pinned minor and force a lockstep bump here for each one.
+
+Each floor is the oldest release this package's own code and types work with,
+and it moves only when that changes. The client's went from `0.3.0` to
+`0.10.0` with `verify` (#21): `lib/utils/api.ts` imports `VerifyAddressCommand`,
+and the published types name `VerifyAddressResponse`, so below `0.10.0` a
+submit with `verify` on fails and the declaration files do not compile. The
+client-react floor did not move: the form reaches verify through `send`, which
+every supported client-react forwards.
 
 The cost is that npm gives no warning when an upstream break lands; it surfaces
 at runtime in a consumer's app. So an upstream change to what this package

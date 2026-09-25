@@ -7,15 +7,22 @@ import type {
   ReverseGeocodeCommandOutput,
   SuggestCommandInput,
   SuggestCommandOutput,
+  VerifyAddressResponse,
 } from "@chaosity/location-client";
-import { AutocompleteCommand, GetPlaceCommand, ReverseGeocodeCommand, SuggestCommand } from "@chaosity/location-client";
+import {
+  AutocompleteCommand,
+  GetPlaceCommand,
+  ReverseGeocodeCommand,
+  SuggestCommand,
+  VerifyAddressCommand,
+} from "@chaosity/location-client";
 import { useNotificationStore } from "../stores/notificationStore";
 
 /**
  * Per-request transport options, forwarded to the client's `send`.
  *
- * Declared structurally rather than imported so this builds against the
- * currently published client; it matches `SendOptions` there.
+ * Declared structurally rather than imported: the subset of the client's
+ * `SendOptions` this package forwards, not a copy of all of it.
  */
 export interface RequestOptions {
   signal?: AbortSignal;
@@ -94,6 +101,26 @@ export const reverseGeocode = async (
     return await client.send(command, options);
   } catch (error) {
     handleApiError(error, "reverse-geocode", "Reverse geocode");
+    throw error;
+  }
+};
+
+/**
+ * `POST /address/verify` (#21): the place record plus `verified`, the one
+ * Places result an integrator may store. A command sent through `send`, so it
+ * needs only a client that has the command (@chaosity/location-client 0.10.0+),
+ * whatever version of the React provider carries it.
+ */
+export const verifyAddress = async (
+  client: LocationClientLike,
+  placeId: string,
+  options?: RequestOptions,
+): Promise<VerifyAddressResponse> => {
+  try {
+    const command = new VerifyAddressCommand({ PlaceId: placeId });
+    return await client.send(command, options);
+  } catch (error) {
+    handleApiError(error, "verify-address", "Address verification");
     throw error;
   }
 };

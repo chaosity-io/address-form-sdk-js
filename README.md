@@ -153,16 +153,17 @@ Main component wrapping the address form.
 
 #### Props
 
-| Property                        | Type                            | Required | Default | Description                                                                                                                                    |
-| ------------------------------- | ------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag) for localized suggestions (e.g., `"en"`, `"es"`)                              |
-| `politicalView`                 | `string`                        | No       | -       | Political view for disputed territory display in address suggestions. Open to every plan; the map's own is `AddressForm.Map`'s `politicalView` |
-| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limit suggestions to the selected country                                                                                                      |
-| `allowedCountries`              | `string[]`                      | No       | -       | ISO 3166-1 **alpha-2** country codes to restrict suggestions. An application that has a country scope refuses alpha-3 (`AUS`) with a 400       |
-| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Filter results by place type (e.g., `"Locality"`, `"PostalCode"`)                                                                              |
-| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as `[longitude, latitude]`                                                                                                  |
-| `initialMapZoom`                | `number`                        | No       | Varies  | Initial zoom level (default: 10 with center, 5 with single country, 1 otherwise)                                                               |
-| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback receiving an async `getData` function that resolves the captured form data                                                            |
+| Property                        | Type                            | Required | Default | Description                                                                                                                                                       |
+| ------------------------------- | ------------------------------- | -------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag) for localized suggestions (e.g., `"en"`, `"es"`)                                                 |
+| `politicalView`                 | `string`                        | No       | -       | Political view for disputed territory display in address suggestions. Open to every plan; the map's own is `AddressForm.Map`'s `politicalView`                    |
+| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limit suggestions to the selected country                                                                                                                         |
+| `allowedCountries`              | `string[]`                      | No       | -       | ISO 3166-1 **alpha-2** country codes to restrict suggestions. An application that has a country scope refuses alpha-3 (`AUS`) with a 400                          |
+| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Filter results by place type (e.g., `"Locality"`, `"PostalCode"`)                                                                                                 |
+| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as `[longitude, latitude]`                                                                                                                     |
+| `initialMapZoom`                | `number`                        | No       | Varies  | Initial zoom level (default: 10 with center, 5 with single country, 1 otherwise)                                                                                  |
+| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback receiving an async `getData` function that resolves the captured form data                                                                               |
+| `verify`                        | `boolean`                       | No       | `false` | Resolve the chosen PlaceId through address verification when `getData()` is called — see [Verifying the address](#verifying-the-address). Billed per verification |
 
 #### Form Submission Data
 
@@ -172,25 +173,81 @@ onSubmit: async (getData) => {
 };
 ```
 
+Everything the form fills in comes from suggestions and place details, which
+are for display only. To keep an address, turn on [`verify`](#verifying-the-address).
+
 > **Changed in 0.4.0** — `getData` no longer takes an `intendedUse` argument.
 > Passing `"Storage"` used to issue a second, separately billed `GetPlace` for
 > the same place. The Location Service never forwards `IntendedUse`, so that
 > call returned identical data and granted no storage rights — it only charged
-> you twice. Call `getData()` with no arguments.
+> you twice. The storable path is `verify`.
 
-| Property             | Type             | Description                                                              |
-| -------------------- | ---------------- | ------------------------------------------------------------------------ |
-| `placeId`            | `string`         | Place ID (present when address selected from typeahead or locate button) |
-| `addressLineOne`     | `string`         | Primary address line (street address)                                    |
-| `addressLineTwo`     | `string`         | Secondary address line (apartment, suite, etc.)                          |
-| `city`               | `string`         | City name                                                                |
-| `province`           | `string`         | State or province                                                        |
-| `postalCode`         | `string`         | Postal or ZIP code                                                       |
-| `country`            | `string`         | Country code (ISO 3166-1 alpha-2)                                        |
-| `originalPosition`   | `string`         | Original coordinates from API (`longitude,latitude`)                     |
-| `adjustedPosition`   | `string`         | User-adjusted coordinates if map pin was moved (`longitude,latitude`)    |
-| `addressDetails`     | `Address`        | Full address object from the GetPlace API response                       |
-| `secondaryAddresses` | `RelatedPlace[]` | Sub-addresses (units, suites) returned for the selected place            |
+| Property             | Type                    | Description                                                                                                                                                    |
+| -------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `placeId`            | `string`                | PlaceId of the last pick from the typeahead or locate button, as chosen (a unit's as its building lists it). Not cleared when the fields are edited afterwards |
+| `verified`           | `boolean`               | With `verify` on: whether the service verified the chosen PlaceId. Absent when there was nothing to verify                                                     |
+| `verification`       | `VerifyAddressResponse` | With `verify` on: the service's whole answer, the place record plus `verified` — the result you may store                                                      |
+| `addressLineOne`     | `string`                | Primary address line (street address)                                                                                                                          |
+| `addressLineTwo`     | `string`                | Secondary address line (apartment, suite, etc.)                                                                                                                |
+| `city`               | `string`                | City name                                                                                                                                                      |
+| `province`           | `string`                | State or province                                                                                                                                              |
+| `postalCode`         | `string`                | Postal or ZIP code                                                                                                                                             |
+| `country`            | `string`                | Country code (ISO 3166-1 alpha-2)                                                                                                                              |
+| `originalPosition`   | `string`                | Original coordinates from API (`longitude,latitude`)                                                                                                           |
+| `adjustedPosition`   | `string`                | User-adjusted coordinates if map pin was moved (`longitude,latitude`)                                                                                          |
+| `addressDetails`     | `Address`               | Full address object from the GetPlace API response                                                                                                             |
+| `secondaryAddresses` | `RelatedPlace[]`        | Sub-addresses (units, suites) returned for the selected place                                                                                                  |
+
+#### Verifying the address
+
+With `verify` on — `<AddressForm verify>`, or `verify: true` in `render()` —
+`getData()` sends the chosen PlaceId to the service's address verification and
+resolves with two more fields:
+
+```javascript
+onSubmit: async (getData) => {
+  const data = await getData();
+  if (data.verified) {
+    save(data.verification); // the place record, which you may store
+  }
+};
+```
+
+- **`verification` is the one result you may store**, except a place in Japan,
+  which may not be stored at all. Everything else the form returns is for
+  display only.
+- `verified` is `true` for an address the service knows the exact point of
+  (`PointAddress`), or a unit (`SecondaryAddress`). It is `false` for anything
+  else: an interpolated address, a street, a locality, a point of interest. A
+  `false` resolves; it is not an error.
+- **Each verification is billed, whether or not the address verifies**, which
+  is why `verify` is off by default. The call is made when you call
+  `getData()`, never while the person is typing. Each PlaceId is verified once
+  per form: submitting the same selection again reuses the first answer.
+- To verify a unit, pick it from the building's list of units. A unit typed
+  into address line two is not verified.
+- Keep `placeId` beside `verification`. The answer's own `PlaceId` can differ,
+  and for a unit it does. The service does not accept that one back, while
+  `placeId` verifies again.
+- An address the browser autofills is resolved to its best match — the place
+  the map pin and `addressDetails` already show — and that match is what is
+  verified. Compare `verification.Address` with the fields if the difference
+  matters to you.
+- There is no call, and `verified` is absent, when there is nothing to verify:
+  - the address was typed by hand, never picked, or an autofill resolved to
+    nothing;
+  - address line one, city, province/state, postal code or country no longer
+    reads what the pick or the autofill filled in. `placeId` still names that
+    place, but it no longer describes what is being submitted.
+
+  Address line two and the map pin are not part of that check.
+
+- **A failed verification rejects `getData()`** with the client's error, after
+  showing it in the form's notification banner. It is not kept, so the next
+  submit tries again.
+- Needs `@chaosity/location-client` 0.10.0 or later, which this package's peer
+  range requires from the release that adds `verify`. Any
+  `@chaosity/location-client-react` this package supports will do.
 
 ### Form Input Fields
 
@@ -243,7 +300,7 @@ a style you did not choose would hide the reason.
 
 ## Error Handling
 
-API errors (autocomplete, suggest, place detail) are handled automatically:
+API errors (autocomplete, suggest, place detail, and verification when `verify` is on) are handled automatically:
 
 - A notification banner appears inside the form describing the failure
 - The error is logged to `console.error` with a link to [troubleshooting docs](https://docs.chaosity.cloud/address-form)

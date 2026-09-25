@@ -2,6 +2,7 @@ import type { AutocompleteFilterPlaceType } from "@chaosity/location-client";
 import { createContext, useContext } from "react";
 import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
 import type { AddressFormData } from "./AddressForm";
+import type { PickedFields } from "./use-get-data";
 
 export interface MapViewState {
   longitude: number;
@@ -11,6 +12,14 @@ export interface MapViewState {
 
 export interface AddressFormContextType {
   data: AddressFormData;
+  /**
+   * The picked fields as they stood when `placeId` was last written — by a
+   * pick, or by autofill resolving the browser's text to a place. `getData`
+   * verifies only while the form still reads them (#21).
+   */
+  pick?: PickedFields;
+  /** Resolve the chosen PlaceId through `POST /address/verify` on submit (#21). */
+  verify?: boolean;
   setData: (data: AddressFormData) => void;
   resetData?: () => void;
   mapViewState?: MapViewState;

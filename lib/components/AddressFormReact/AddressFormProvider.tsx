@@ -8,8 +8,12 @@ import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
 import type { AddressFormData } from "./AddressForm";
 import type { AddressFormContextType, MapViewState } from "./AddressFormContext";
 import { AddressFormContext } from "./AddressFormContext";
+import type { PickedFields } from "./use-get-data";
+import { pickedFields } from "./use-get-data";
 
 export interface AddressFormProps extends PropsWithChildren {
+  /** Resolve the chosen PlaceId through `POST /address/verify` on submit (#21). */
+  verify?: boolean;
   language?: string;
   /**
    * Political view for address suggestions. Open to every plan — unlike the
@@ -25,6 +29,7 @@ export interface AddressFormProps extends PropsWithChildren {
 
 export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
   children,
+  verify,
   language,
   politicalView,
   showCurrentCountryResultsOnly,
@@ -33,7 +38,10 @@ export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
   initialMapCenter,
   initialMapZoom,
 }) => {
-  const [data, setData] = useState<AddressFormData>({});
+  // The data, and the picked fields as they stood when `placeId` was last
+  // written — by a pick, or by autofill resolving the browser's text to a place.
+  // One state, so the two cannot disagree (#21).
+  const [{ data, pick }, setForm] = useState<{ data: AddressFormData; pick?: PickedFields }>({ data: {} });
   const [isAutofill, setIsAutofill] = useState(false);
   const [mapViewState, setMapViewState] = useState<MapViewState>(() => {
     // If explicit initial values provided, use them
@@ -69,8 +77,14 @@ export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
   const context = useMemo<AddressFormContextType>(
     () => ({
       data,
-      setData: (data: AddressFormData) => setData((state) => ({ ...state, ...data })),
-      resetData: () => setData({}),
+      pick,
+      verify,
+      setData: (next: AddressFormData) =>
+        setForm((form) => {
+          const merged = { ...form.data, ...next };
+          return { data: merged, pick: "placeId" in next ? pickedFields(merged) : form.pick };
+        }),
+      resetData: () => setForm({ data: {} }),
       mapViewState,
       setMapViewState,
       language,
@@ -85,6 +99,8 @@ export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
     }),
     [
       data,
+      pick,
+      verify,
       mapViewState,
       language,
       politicalView,
