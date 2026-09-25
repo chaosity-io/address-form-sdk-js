@@ -32,14 +32,19 @@ git push --delete origin v0.2.4 && git tag -d v0.2.4
 `@chaosity/location-client` → `@chaosity/location-client-react` → this package.
 
 Both clients are declared twice. The **peer** ranges are deliberately wide, so a
-client minor never strands a consumer, and they do not move on a release:
+client minor never strands a consumer. A release moves one only when this
+package's own code needs a newer client, as `verify` did (see `AGENTS.md`):
 
 ```json
 "peerDependencies": {
-  "@chaosity/location-client": ">=0.3.0",
+  "@chaosity/location-client": ">=0.10.0",
   "@chaosity/location-client-react": ">=0.2.0"
 }
 ```
+
+A release that raises a peer floor is a **minor**: a consumer on an older client
+who takes it gets a peer conflict on install, and on `0.x` a breaking change goes
+in the minor.
 
 The **devDependencies** are the other half, and the caret trap does govern them:
 ordinary carets, and a caret on a `0.x` version never crosses the minor. They

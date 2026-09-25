@@ -198,7 +198,8 @@ describe("Typeahead Component", () => {
         { signal: expect.any(AbortSignal) },
       );
       expect(mockOnSelect).toHaveBeenCalledWith({
-        placeId: "mock-place-id",
+        // The PlaceId chosen, not the one GetPlace answered with (#21).
+        placeId: "place-1",
         addressLineOneField: "123 Mock St",
         addressLineTwoField: undefined,
         fullAddress: {
@@ -435,6 +436,8 @@ describe("Typeahead Component", () => {
     await waitFor(() => {
       expect(mockOnChange).toHaveBeenCalledWith("Santa Croce, Sestiere Santa Croce, 1332A, 30135 Venezia VE, Italia");
       expect(mockOnSelect).toHaveBeenCalledWith({
+        // The PlaceId chosen, even where GetPlace's answer carries none (#21).
+        placeId: "test-place-id",
         addressLineOneField: "Santa Croce, Sestiere Santa Croce, 1332A, 30135 Venezia VE, Italia",
         fullAddress: expect.objectContaining({
           Country: { Code2: "IT", Name: "Italia" },

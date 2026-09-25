@@ -69,7 +69,9 @@ export function LocateButton({ onLocate, apiName, className = "", ...restProps }
           : addressLineOneFallback;
 
         onLocate({
-          placeId: placeResult.PlaceId,
+          // The PlaceId looked up, not the one GetPlace answers with: for a
+          // unit those differ, and only this one resolves again (#21).
+          placeId,
           addressLineOneField,
           fullAddress: placeResult.Address,
           position: placeResult.Position as [number, number],

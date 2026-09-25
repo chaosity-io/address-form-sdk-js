@@ -19,9 +19,14 @@ const meta = {
   args: {
     // AddressForm Props
     onSubmit: async (getData: any) => {
-      const data = await getData();
-      action("onSubmit")(data);
+      // With `verify` on, a failed verification rejects getData (#21).
+      try {
+        action("onSubmit")(await getData());
+      } catch (error) {
+        action("onSubmit rejected")(error);
+      }
     },
+    verify: false,
     language: undefined,
     politicalView: undefined,
     showCurrentCountryResultsOnly: false,
@@ -64,6 +69,16 @@ const meta = {
       description: "Callback function that receives a getData async function for retrieving the captured form data",
       table: {
         category: "AddressForm",
+      },
+    },
+    verify: {
+      type: "boolean",
+      control: "boolean",
+      description:
+        "Resolve the chosen PlaceId through POST /address/verify when getData() is called, adding `verified` and a result you may store. Billed per verification, whether or not the address verifies",
+      table: {
+        category: "AddressForm",
+        defaultValue: { summary: "false" },
       },
     },
     language: {
@@ -340,6 +355,7 @@ export const Default: Story = {
       <LocationClientProvider getConfig={getConfig}>
         <AddressForm
           onSubmit={args.onSubmit}
+          verify={args.verify}
           language={args.language}
           politicalView={args.politicalView}
           showCurrentCountryResultsOnly={args.showCurrentCountryResultsOnly}
@@ -411,4 +427,15 @@ export const Default: Story = {
       </LocationClientProvider>
     );
   },
+};
+
+/**
+ * `verify` on: pick an address — or a unit from a building's list — and submit.
+ * The onSubmit action shows `verified` and `verification`, the result you may
+ * store. One verification per PlaceId: submit the same pick again and the
+ * answer is reused, not requested and billed again.
+ */
+export const WithVerification: Story = {
+  render: Default.render,
+  args: { verify: true } as any,
 };

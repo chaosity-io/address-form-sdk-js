@@ -64,8 +64,15 @@ const getSecondaryDesignator = (result: GetPlaceCommandOutput): string | undefin
   return undefined;
 };
 
-/** Builds TypeaheadOutput from a GetPlace result */
-const buildOutput = (result: GetPlaceCommandOutput, fallbackTitle: string): TypeaheadOutput => {
+/**
+ * Builds TypeaheadOutput from a GetPlace result.
+ *
+ * `placeId` is the PlaceId that was chosen and sent, never `result.PlaceId`
+ * (#21). Asked for a unit, Amazon answers with a different PlaceId, which no
+ * Places route accepts back — GetPlace and verify both fail upstream. The one
+ * sent was just resolved, so it is known good.
+ */
+const buildOutput = (result: GetPlaceCommandOutput, fallbackTitle: string, placeId: string): TypeaheadOutput => {
   const [lng, lat] = result.Position ?? [];
   const matchedCountry = countries.find((c) => c.code === result.Address?.Country?.Code2);
   const addressLineOneFallback = result.Address?.Label || fallbackTitle;
@@ -80,7 +87,7 @@ const buildOutput = (result: GetPlaceCommandOutput, fallbackTitle: string): Type
   }
 
   return {
-    placeId: result.PlaceId,
+    placeId,
     addressLineOneField,
     addressLineTwoField,
     fullAddress: result.Address,
@@ -198,7 +205,7 @@ const APITypeahead = ({
           PoliticalView: apiInput?.PoliticalView,
         }),
       );
-      const secondaryOutput = buildOutput(secondaryResult, selected.Title ?? expanded.title);
+      const secondaryOutput = buildOutput(secondaryResult, selected.Title ?? expanded.title, selected.PlaceId!);
       // Prepend unit designator to the parent's address line one (e.g. "3/57 South Street")
       const unit = getSecondaryDesignator(secondaryResult);
       const parentAddress = expanded.output.addressLineOneField ?? "";
@@ -219,7 +226,7 @@ const APITypeahead = ({
         }),
       );
 
-      const output = buildOutput(result, selected.title);
+      const output = buildOutput(result, selected.title, selected.placeId);
 
       // If the place has secondary addresses, expand instead of completing
       if (result.SecondaryAddresses && result.SecondaryAddresses.length > 0) {

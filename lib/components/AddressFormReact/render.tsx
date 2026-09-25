@@ -17,11 +17,18 @@ import { Field } from "./AddressFormFields";
 import { AddressFormMap } from "./AddressFormMap";
 import { AddressFormProvider } from "./AddressFormProvider";
 import { AddressFormTextField } from "./AddressFormTextField";
+import { useGetData } from "./use-get-data";
 import { getBoolean, getString } from "./utils";
 
 export interface RenderParams {
   root: string;
   getConfig: () => Promise<ClientConfig & { expiresAt?: number }>;
+  /**
+   * Resolve the chosen PlaceId through `POST /address/verify` when `getData()`
+   * is called, so it returns `verified` and a result you may store (#21). Off by
+   * default: each verification is billed, whether or not the address verifies.
+   */
+  verify?: boolean;
   language?: string;
   /**
    * Political view for address suggestions. Open to every plan — unlike the
@@ -58,6 +65,7 @@ export const render = ({ root: selector, ...formProps }: RenderParams) => {
   root.render(
     <LocationClientProvider getConfig={formProps.getConfig}>
       <AddressFormProvider
+        verify={formProps.verify}
         language={formProps.language}
         politicalView={formProps.politicalView}
         showCurrentCountryResultsOnly={formProps.showCurrentCountryResultsOnly}
@@ -179,7 +187,8 @@ const FormEventHandler: FunctionComponent<{
   selector: string;
   onSubmit?: SubmitHandler;
 }> = ({ selector, onSubmit }) => {
-  const { data, setData, resetData } = useAddressFormContext();
+  const { resetData } = useAddressFormContext();
+  const getData = useGetData();
 
   useEffect(() => {
     const form = document.querySelector(selector) as HTMLFormElement;
@@ -189,7 +198,7 @@ const FormEventHandler: FunctionComponent<{
       event.preventDefault();
 
       // Deliberately no second GetPlace — see the note in AddressForm.tsx (#13).
-      onSubmit?.(async () => data);
+      onSubmit?.(getData);
     };
 
     const handleReset = () => {
@@ -203,7 +212,7 @@ const FormEventHandler: FunctionComponent<{
       form.removeEventListener("submit", handleSubmit);
       form.removeEventListener("reset", handleReset);
     };
-  }, [selector, data, setData, resetData, onSubmit]);
+  }, [selector, getData, resetData, onSubmit]);
 
   return null;
 };

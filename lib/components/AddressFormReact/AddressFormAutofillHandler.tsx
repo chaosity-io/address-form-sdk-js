@@ -53,6 +53,12 @@ export const AddressFormAutofillHandler = ({ form }: AddressFormAutofillHandlerP
     }
 
     setData({
+      // The place the browser's text resolved to — the one the map pin and
+      // `addressDetails` already show — so `verify` can verify it (#21). The
+      // PlaceId sent, not GetPlace's answer: for a unit those differ, and only
+      // this one resolves again. Writing it snapshots the fields as they stand,
+      // so a hand edit afterwards still means no verify.
+      placeId,
       country: placeResponse.Address?.Country?.Code2, // This override is required since user might have the country name instead of the code in the saved autofill
       originalPosition: placeResponse.Position?.join(","),
       addressDetails: placeResponse.Address,
@@ -121,7 +127,8 @@ const getPlaceId = async (
       }),
     );
 
-    return autocompleteResponse.ResultItems?.[0].PlaceId;
+    // `?.` on the item too: a no-match answer is an empty list, not a missing one.
+    return autocompleteResponse.ResultItems?.[0]?.PlaceId;
   }
 
   if (apiName === "suggest") {
@@ -134,6 +141,6 @@ const getPlaceId = async (
       }),
     );
 
-    return suggestResponse.ResultItems?.[0].Place?.PlaceId;
+    return suggestResponse.ResultItems?.[0]?.Place?.PlaceId;
   }
 };
