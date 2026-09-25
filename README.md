@@ -153,16 +153,16 @@ Main component wrapping the address form.
 
 #### Props
 
-| Property                        | Type                            | Required | Default | Description                                                                                                                              |
-| ------------------------------- | ------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag) for localized suggestions (e.g., `"en"`, `"es"`)                        |
-| `politicalView`                 | `string`                        | No       | -       | Political view for disputed territory display                                                                                            |
-| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limit suggestions to the selected country                                                                                                |
-| `allowedCountries`              | `string[]`                      | No       | -       | ISO 3166-1 **alpha-2** country codes to restrict suggestions. An application that has a country scope refuses alpha-3 (`AUS`) with a 400 |
-| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Filter results by place type (e.g., `"Locality"`, `"PostalCode"`)                                                                        |
-| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as `[longitude, latitude]`                                                                                            |
-| `initialMapZoom`                | `number`                        | No       | Varies  | Initial zoom level (default: 10 with center, 5 with single country, 1 otherwise)                                                         |
-| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback receiving an async `getData` function that resolves the captured form data                                                      |
+| Property                        | Type                            | Required | Default | Description                                                                                                                                    |
+| ------------------------------- | ------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `language`                      | `string`                        | No       | -       | [Language code](https://en.wikipedia.org/wiki/IETF_language_tag) for localized suggestions (e.g., `"en"`, `"es"`)                              |
+| `politicalView`                 | `string`                        | No       | -       | Political view for disputed territory display in address suggestions. Open to every plan; the map's own is `AddressForm.Map`'s `politicalView` |
+| `showCurrentCountryResultsOnly` | `boolean`                       | No       | `false` | Limit suggestions to the selected country                                                                                                      |
+| `allowedCountries`              | `string[]`                      | No       | -       | ISO 3166-1 **alpha-2** country codes to restrict suggestions. An application that has a country scope refuses alpha-3 (`AUS`) with a 400       |
+| `placeTypes`                    | `AutocompleteFilterPlaceType[]` | No       | -       | Filter results by place type (e.g., `"Locality"`, `"PostalCode"`)                                                                              |
+| `initialMapCenter`              | `[number, number]`              | No       | -       | Initial map center as `[longitude, latitude]`                                                                                                  |
+| `initialMapZoom`                | `number`                        | No       | Varies  | Initial zoom level (default: 10 with center, 5 with single country, 1 otherwise)                                                               |
+| `onSubmit`                      | `(getData) => void`             | No       | -       | Callback receiving an async `getData` function that resolves the captured form data                                                            |
 
 #### Form Submission Data
 
@@ -217,22 +217,29 @@ All fields use `data-type="address-form"` plus a `name` attribute.
 
 Map component for previewing and adjusting the selected address location.
 
-| Property                | Type      | HTML Attribute                 | Default | Description                          |
-| ----------------------- | --------- | ------------------------------ | ------- | ------------------------------------ |
-| `mapStyle`              | `array`   | `data-map-style`               | -       | Map style (see below)                |
-| `showNavigationControl` | `boolean` | `data-show-navigation-control` | `true`  | Show map navigation controls         |
-| `adjustablePosition`    | `boolean` | `data-adjustable-position`     | `true`  | Allow users to drag the location pin |
+| Property                | Type      | HTML Attribute                 | Default | Description                                                                                                   |
+| ----------------------- | --------- | ------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------- |
+| `mapStyle`              | `array`   | `data-map-style`               | -       | Map style (see below)                                                                                         |
+| `showNavigationControl` | `boolean` | `data-show-navigation-control` | `true`  | Show map navigation controls                                                                                  |
+| `adjustablePosition`    | `boolean` | `data-adjustable-position`     | `true`  | Allow users to drag the location pin                                                                          |
+| `politicalView`         | `string`  | -                              | -       | A country's view of disputed borders on the map (ISO 3166-1 alpha-3). Needs the `political-view` plan feature |
 
 #### Map Style Options
 
-| React (Array)             | HTML (String)        |
-| ------------------------- | -------------------- |
-| `['Standard', 'Light']`   | `"Standard,Light"`   |
-| `['Standard', 'Dark']`    | `"Standard,Dark"`    |
-| `['Monochrome', 'Light']` | `"Monochrome,Light"` |
-| `['Monochrome', 'Dark']`  | `"Monochrome,Dark"`  |
-| `['Hybrid']`              | `"Hybrid"`           |
-| `['Satellite']`           | `"Satellite"`        |
+| React (Array)             | HTML (String)        | Plan feature |
+| ------------------------- | -------------------- | ------------ |
+| `['Standard', 'Light']`   | `"Standard,Light"`   | -            |
+| `['Standard', 'Dark']`    | `"Standard,Dark"`    | -            |
+| `['Monochrome', 'Light']` | `"Monochrome,Light"` | -            |
+| `['Monochrome', 'Dark']`  | `"Monochrome,Dark"`  | -            |
+| `['Hybrid', 'Light']`     | `"Hybrid"`           | `satellite`  |
+| `['Satellite', 'Light']`  | `"Satellite"`        | `satellite`  |
+
+A plan feature is part of the application's plan, and which plans include which
+feature is on the [pricing page](https://chaosity.cloud/pricing). On a plan
+without it the style is refused: the map stays blank and the form names the
+refused feature. It does not fall back to another style, because a map drawn in
+a style you did not choose would hide the reason.
 
 ## Error Handling
 
@@ -241,6 +248,15 @@ API errors (autocomplete, suggest, place detail) are handled automatically:
 - A notification banner appears inside the form describing the failure
 - The error is logged to `console.error` with a link to [troubleshooting docs](https://docs.chaosity.cloud/address-form)
 - The error is re-thrown so you can handle it in your own code if needed
+
+A map the service refuses reads the refusal before choosing its words. When
+the application's plan does not include an option the map asks for — the
+Hybrid or Satellite style (plan feature `satellite`), or the map's
+`politicalView` (`political-view`) — the service answers
+`FeatureNotEntitledException`, and the form shows its message, which names the
+feature, with what to change. Any other refusal of the map — an origin the
+application does not allow, a plan without maps — shows "Map rendering is
+currently unavailable." and logs a pointer to the setup instructions.
 
 If `getConfig` fails or returns an expired token, the `LocationClientProvider` will call `getConfig` again on the next request. No manual retry logic is needed.
 
