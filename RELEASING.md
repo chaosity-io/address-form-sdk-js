@@ -33,15 +33,10 @@ git push --delete origin v0.2.4 && git tag -d v0.2.4
 
 Both clients are declared twice. The **peer** ranges are deliberately wide, so a
 client minor never strands a consumer. A release moves one only when this
-package's own code needs a newer client, as `verify` did for the client and
-the map's `apiUrl` did for client-react (see `AGENTS.md`):
-
-```json
-"peerDependencies": {
-  "@chaosity/location-client": ">=0.10.0",
-  "@chaosity/location-client-react": ">=0.8.0"
-}
-```
+package's own code needs a newer client, or when its own dependencies can no
+longer install beside an older one: `verify` did it for the client, the map's
+`apiUrl` for client-react, and maplibre-gl 6 for both (see `AGENTS.md`).
+`npm pkg get peerDependencies` prints the current floors.
 
 A release that raises a peer floor is a **minor**: a consumer on an older client
 who takes it gets a peer conflict on install, and on `0.x` a breaking change goes

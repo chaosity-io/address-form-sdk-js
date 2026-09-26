@@ -10,7 +10,9 @@ The SDK can be used inside a React app or as a standalone HTML/JavaScript compon
 
 You need a Chaosity Location Service account and a bearer token. Tokens are issued via your backend using the [Location Service API](https://docs.chaosity.cloud/api).
 
-The React library's peer dependencies are `@chaosity/location-client` `>=0.10.0`, `@chaosity/location-client-react` `>=0.8.0`, `@tanstack/react-query` `^5.25.0`, `react` `^19.0.0` and `react-dom` `^19.0.0`. The standalone bundle carries its own copies and needs none of them.
+The React library's peer dependencies are `@chaosity/location-client` `>=0.11.0`, `@chaosity/location-client-react` `>=0.9.0`, `@tanstack/react-query` `^5.25.0`, `react` `^19.0.0` and `react-dom` `^19.0.0`. The standalone bundle carries its own copies and needs none of them.
+
+The map is MapLibre GL JS 6.4.1 or a later 6.x release, which the package installs. Earlier releases carry [GHSA-jrc7-96c5-q579](https://github.com/advisories/GHSA-jrc7-96c5-q579), an XSS in the attribution control.
 
 ### Installation
 
@@ -22,7 +24,7 @@ npm install @chaosity/address-form @chaosity/location-client @chaosity/location-
 
 #### HTML/JavaScript (standalone)
 
-Include the CSS and script from the CDN:
+Include the CSS and script from the CDN. The bundle carries MapLibre and its worker, and starts the worker from a `blob:` URL, so a page with a Content Security Policy needs `worker-src blob:`.
 
 ```html
 <head>
@@ -43,6 +45,8 @@ Include the CSS and script from the CDN:
 Wrap your app with `LocationClientProvider` from `@chaosity/location-client-react`, then use `<AddressForm>` inside it. Import the package's stylesheet once as well: the library leaves CSS to your bundler, and without it the suggestion list and the map's controls are unstyled.
 
 In a Next.js App Router project, put the example in a Client Component, a file that begins with `"use client"`. The form uses React context, which a Server Component cannot, and its `getConfig` and `onSubmit` are functions, which a Server Component cannot pass to a Client Component.
+
+The map runs MapLibre's worker from a file your application serves, and `AddressForm.Map` takes its URL as `workerUrl`. Without it the map mounts and draws nothing. Copy `maplibre-gl-worker.mjs` and `maplibre-gl-shared.mjs` from `node_modules/maplibre-gl/dist/` into `public/maplibre/` before every build and dev run: [The MapLibre worker](https://github.com/chaosity-io/location-service-client#the-maplibre-worker) in `@chaosity/location-client`'s README has the script. The example serves them from there. Under Vite you can copy nothing, and pass `import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"` as `workerUrl` instead.
 
 ```jsx
 import React from "react";
@@ -85,7 +89,7 @@ export default function App() {
               </button>
             </Flex>
           </Flex>
-          <AddressForm.Map mapStyle={["Standard", "Light"]} />
+          <AddressForm.Map mapStyle={["Standard", "Light"]} workerUrl="/maplibre/maplibre-gl-worker.mjs" />
         </Flex>
       </AddressForm>
     </LocationClientProvider>
@@ -254,8 +258,8 @@ onSubmit: async (getData) => {
 - **A failed verification rejects `getData()`** with the client's error, after
   showing it in the form's notification banner. It is not kept, so the next
   submit tries again.
-- Needs `@chaosity/location-client` 0.10.0 or later, which this package's peer
-  range requires from the release that adds `verify`. Any
+- Needs `@chaosity/location-client` 0.10.0 or later, the release that adds
+  `verify`, which this package's peer range (`>=0.11.0`) covers. Any
   `@chaosity/location-client-react` this package supports will do.
 
 ### Form Input Fields
@@ -283,13 +287,14 @@ All fields use `data-type="address-form"` plus a `name` attribute.
 
 Map component for previewing and adjusting the selected address location.
 
-| Property                | Type      | HTML Attribute                 | Default                | Description                                                                                                   |
-| ----------------------- | --------- | ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
-| `mapStyle`              | `array`   | `data-map-style`               | -                      | Map style (see below)                                                                                         |
-| `showNavigationControl` | `boolean` | `data-show-navigation-control` | `true`                 | Show map navigation controls                                                                                  |
-| `adjustablePosition`    | `boolean` | `data-adjustable-position`     | `true`                 | Allow users to drag the location pin                                                                          |
-| `politicalView`         | `string`  | -                              | -                      | A country's view of disputed borders on the map (ISO 3166-1 alpha-3). Needs the `political-view` plan feature |
-| `apiUrl`                | `string`  | -                              | `getConfig`'s `apiUrl` | The API the map's style and tiles come from. Set it only to override the one your `getConfig` returns         |
+| Property                | Type      | HTML Attribute                 | Default                | Description                                                                                                           |
+| ----------------------- | --------- | ------------------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| `mapStyle`              | `array`   | `data-map-style`               | -                      | Map style (see below)                                                                                                 |
+| `showNavigationControl` | `boolean` | `data-show-navigation-control` | `true`                 | Show map navigation controls                                                                                          |
+| `adjustablePosition`    | `boolean` | `data-adjustable-position`     | `true`                 | Allow users to drag the location pin                                                                                  |
+| `politicalView`         | `string`  | -                              | -                      | A country's view of disputed borders on the map (ISO 3166-1 alpha-3). Needs the `political-view` plan feature         |
+| `apiUrl`                | `string`  | -                              | `getConfig`'s `apiUrl` | The API the map's style and tiles come from. Set it only to override the one your `getConfig` returns                 |
+| `workerUrl`             | `string`  | -                              | -                      | Where your application serves `maplibre-gl-worker.mjs`. The React map needs it; the standalone bundle carries its own |
 
 The map asks for nothing until the provider has its first token, so it appears
 a moment after the fields rather than requesting its style without one.

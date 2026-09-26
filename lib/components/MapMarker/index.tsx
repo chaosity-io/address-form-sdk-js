@@ -1,3 +1,4 @@
+import type { Marker as MaplibreMarker } from "maplibre-gl";
 import { useRef, useState } from "react";
 import { Marker } from "react-map-gl/maplibre";
 import type { ColorScheme } from "../Map/index.tsx";
@@ -17,7 +18,7 @@ export function MapMarker({
   onSaveMarkerPosition,
   colorScheme,
 }: MapMarkerProps) {
-  const markerRef = useRef<maplibregl.Marker>(null);
+  const markerRef = useRef<MaplibreMarker>(null);
   const [isAdjustMode, setIsAdjustMode] = useState(false);
 
   const handleAdjustMarker = () => {

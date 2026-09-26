@@ -3,11 +3,14 @@ import react from "@vitejs/plugin-react";
 import path, { resolve } from "path";
 import dts from "vite-plugin-dts";
 import { defineConfig } from "vitest/config";
+import { maplibreWorker } from "./vite-plugin-maplibre-worker";
 
 export default defineConfig({
   plugins: [
     react(),
     vanillaExtractPlugin(),
+    // For the dev page (index.html), which runs the standalone entry.
+    maplibreWorker(),
     dts({
       include: ["lib"],
       exclude: ["lib/main-standalone.tsx", "lib/**/*.css.ts", "lib/setupTests.ts", "**/*.test.{ts,tsx}"],
