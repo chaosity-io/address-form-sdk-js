@@ -4,7 +4,17 @@
   "version": "0.5.0",
   "license": "Apache-2.0",
   "main": "./dist/lib/address-form-sdk.cjs.js",
+  "module": "./dist/lib/address-form-sdk.mjs",
   "types": "dist/lib/main.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/lib/main.d.ts",
+      "import": "./dist/lib/address-form-sdk.mjs",
+      "require": "./dist/lib/address-form-sdk.cjs.js"
+    },
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
   "files": [
     "dist"
   ],
@@ -20,21 +30,23 @@
     "lint": "eslint . && prettier --check .",
     "lint:fix": "eslint --fix . && prettier --write .",
     "preview": "vite preview",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run build && npm run test:dist",
     "storybook": "storybook dev -p 6006",
     "build": "npm run build:lib && npm run build:standalone",
     "build:lib": "tsc -b && vite build",
     "build:standalone": "tsc -b && vite build --config ./vite.config.standalone.ts",
     "build:storybook": "storybook build",
     "test": "vitest run --coverage",
+    "test:dist": "node scripts/smoke-dist.mjs",
     "format": "prettier --write .",
     "prepare": "husky"
   },
   "devDependencies": {
     "@chaosity/location-client": "^0.10.0",
-    "@chaosity/location-client-react": "^0.7.0",
+    "@chaosity/location-client-react": "^0.8.0",
     "@eslint/js": "^10",
     "@storybook/react-vite": "^10",
+    "@tanstack/react-query": "^5.81.5",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.3.0",
@@ -66,7 +78,6 @@
   },
   "dependencies": {
     "@headlessui/react": "^2.2.2",
-    "@tanstack/react-query": "^5.81.5",
     "@vanilla-extract/css": "^1.17.1",
     "clsx": "^2.1.1",
     "maplibre-gl": "^5.4.0",
@@ -76,7 +87,8 @@
   },
   "peerDependencies": {
     "@chaosity/location-client": ">=0.10.0",
-    "@chaosity/location-client-react": ">=0.2.0",
+    "@chaosity/location-client-react": ">=0.8.0",
+    "@tanstack/react-query": "^5.25.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   }

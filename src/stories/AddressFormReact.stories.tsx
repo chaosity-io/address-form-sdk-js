@@ -3,14 +3,9 @@
 import { LocationClientProvider } from "@chaosity/location-client-react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { action } from "storybook/actions";
+import { getConfig } from "../../.storybook/get-config";
 import { AddressForm } from "../../lib/components/AddressFormReact/AddressForm";
 import { Flex } from "../../lib/components/Flex";
-
-const getConfig = async () => ({
-  apiUrl: import.meta.env.STORYBOOK_API_URL || "https://api.chaosity.cloud",
-  token: import.meta.env.STORYBOOK_TOKEN || "demo-token",
-  expiresAt: Date.now() + 900_000,
-});
 
 const meta = {
   title: "Component/AddressForm",

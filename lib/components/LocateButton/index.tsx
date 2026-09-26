@@ -1,8 +1,8 @@
+import { useLocationClient } from "@chaosity/location-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ComponentProps } from "react";
 import { useState } from "react";
 import { countries } from "../../data/countries.ts";
-import useAmazonLocationContext from "../../hooks/use-amazon-location-context.ts";
 import { Locate } from "../../icons/Locate.tsx";
 import { getPlaceQuery, reverseGeocodeQuery, suggestQuery } from "../../utils/queries.ts";
 import type { TypeaheadOutput } from "../Typeahead/index.tsx";
@@ -18,10 +18,13 @@ interface LocateButtonProps extends ComponentProps<"button"> {
 export function LocateButton({ onLocate, apiName, className = "", ...restProps }: LocateButtonProps) {
   const [isDisabled, setIsDisabled] = useState(false);
   const queryClient = useQueryClient();
-  const { client } = useAmazonLocationContext();
+  // Null until the provider's first getConfig answers, and after one fails
+  // until a retry succeeds: nothing to look a position up with (#30).
+  const { client } = useLocationClient();
 
   const getCurrentLocation = (e: { preventDefault: () => void }) => {
     e.preventDefault();
+    if (!client) return;
 
     if (!navigator.geolocation) {
       console.error("Geolocation is not supported by your browser");
@@ -89,7 +92,7 @@ export function LocateButton({ onLocate, apiName, className = "", ...restProps }
       onClick={getCurrentLocation}
       className={`${styleButton} ${className || ""}`}
       {...restProps}
-      disabled={isDisabled}
+      disabled={isDisabled || !client}
       data-testid="aws-current-location"
     >
       <Locate />

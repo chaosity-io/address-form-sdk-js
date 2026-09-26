@@ -1,5 +1,5 @@
 import type { AutocompleteCommandInput, SuggestCommandInput } from "@chaosity/location-client";
-import { useQuery } from "@tanstack/react-query";
+import { skipToken, useQuery } from "@tanstack/react-query";
 import type { LocationClientLike } from "../../utils/api";
 import { autocomplete, suggest } from "../../utils/api";
 
@@ -8,7 +8,8 @@ export type TypeaheadAPIName = "autocomplete" | "suggest";
 export type TypeaheadAPIInput = Partial<AutocompleteCommandInput> | Partial<SuggestCommandInput>;
 
 export type UseTypeaheadParams = {
-  client: LocationClientLike;
+  /** Null until the provider has a client; the query asks nothing until then (#30). */
+  client: LocationClientLike | null;
   apiName: TypeaheadAPIName;
   apiInput?: TypeaheadAPIInput;
   enabled: boolean;
@@ -33,31 +34,39 @@ export const useTypeaheadQuery = ({ client, apiName, apiInput, enabled }: UseTyp
     // The sibling helpers in utils/queries.ts have done this since T31; this
     // hook was the one path left that did not, and it is the one that fires on
     // every keystroke (#2 / T34).
-    queryFn: ({ signal }) => {
-      if (apiName === "autocomplete") {
-        return getAutocompleteResults(
-          client,
-          {
-            QueryText: "",
-            ...(apiInput as Partial<AutocompleteCommandInput>),
-          },
-          signal,
-        );
-      }
+    //
+    // No client, no query: before the provider's first getConfig answers, and
+    // after one fails until a retry succeeds. A skipped query caches nothing, so
+    // what was typed meanwhile is asked for as soon as a client arrives (#30).
+    // An empty answer instead would be cached under that text and never asked
+    // again: provider-states.test.tsx holds this.
+    queryFn: !client
+      ? skipToken
+      : ({ signal }) => {
+          if (apiName === "autocomplete") {
+            return getAutocompleteResults(
+              client,
+              {
+                QueryText: "",
+                ...(apiInput as Partial<AutocompleteCommandInput>),
+              },
+              signal,
+            );
+          }
 
-      if (apiName === "suggest") {
-        return getSuggestResults(
-          client,
-          {
-            QueryText: "",
-            ...(apiInput as Partial<SuggestCommandInput>),
-          },
-          signal,
-        );
-      }
+          if (apiName === "suggest") {
+            return getSuggestResults(
+              client,
+              {
+                QueryText: "",
+                ...(apiInput as Partial<SuggestCommandInput>),
+              },
+              signal,
+            );
+          }
 
-      throw new Error(`Invalid value for typeahead api name: '${apiName}'`);
-    },
+          throw new Error(`Invalid value for typeahead api name: '${apiName}'`);
+        },
   });
 };
 

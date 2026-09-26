@@ -20,8 +20,16 @@ export default defineConfig({
 
     lib: {
       entry: resolve(__dirname, "lib/main.tsx"),
-      formats: ["cjs"],
-      fileName: (format) => `address-form-sdk.${format}.js`,
+      // Both, and `exports` in package.json routes each consumer to its own
+      // (#29). With CommonJS alone, an application's `import` of a package that
+      // ships separate import and require builds loaded one copy while this
+      // library's `require` loaded the other. For client-react that is two
+      // contexts, and the provider the application renders is not the one the
+      // form reads. `scripts/smoke-dist.mjs` holds the built package to it.
+      // `.mjs`, not `.js`: this package is not `"type": "module"`, so Node
+      // would read a `.js` file as CommonJS.
+      formats: ["es", "cjs"],
+      fileName: (format) => (format === "es" ? "address-form-sdk.mjs" : `address-form-sdk.${format}.js`),
     },
 
     rolldownOptions: {
@@ -29,6 +37,10 @@ export default defineConfig({
         "@chaosity/location-client",
         "@chaosity/location-client-react",
         "@headlessui/react",
+        // Holds a React context. Bundled, it was a private copy: the exported
+        // Typeahead and LocateButton could not see an application's
+        // QueryClientProvider at all (#29).
+        "@tanstack/react-query",
         "@vanilla-extract/css",
         "react",
         "react-jsx/runtime",

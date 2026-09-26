@@ -154,6 +154,7 @@ export const render = ({ root: selector, ...formProps }: RenderParams) => {
               component: (element) => (
                 <AddressFormMap
                   mapStyle={validateMapStyle(getString(element.dataset, "mapStyle"))}
+                  showNavigationControl={getBoolean(element.dataset, "showNavigationControl")}
                   adjustablePosition={getBoolean(element.dataset, "adjustablePosition")}
                 />
               ),

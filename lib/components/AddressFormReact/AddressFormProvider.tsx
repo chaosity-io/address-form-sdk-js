@@ -8,6 +8,7 @@ import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
 import type { AddressFormData } from "./AddressForm";
 import type { AddressFormContextType, MapViewState } from "./AddressFormContext";
 import { AddressFormContext } from "./AddressFormContext";
+import { LocationClientStatus } from "./LocationClientStatus";
 import type { PickedFields } from "./use-get-data";
 import { pickedFields } from "./use-get-data";
 
@@ -114,7 +115,11 @@ export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AddressFormContext.Provider value={context}>{children}</AddressFormContext.Provider>
+      <AddressFormContext.Provider value={context}>
+        {/* Here, so both forms — <AddressForm> and render() — carry it (#30). */}
+        <LocationClientStatus />
+        {children}
+      </AddressFormContext.Provider>
     </QueryClientProvider>
   );
 };

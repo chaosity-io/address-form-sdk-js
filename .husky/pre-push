@@ -13,3 +13,5 @@ npm ci --dry-run
 npm run lint
 npm test
 npm run build
+# The built package, packed and loaded as an application loads it (#29).
+npm run test:dist

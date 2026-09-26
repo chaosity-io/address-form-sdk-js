@@ -277,14 +277,19 @@ describe("Typeahead Component", () => {
       fireEvent.change(getByRole("combobox"), { target: { value: "123 Main St" } });
     });
 
-    expect(api.autocomplete).toHaveBeenCalledWith(
-      expect.any(Object), // client object
-      expect.objectContaining({
-        QueryText: "123 Main St",
-        Language: "fr",
-        MaxResults: 5,
-      }),
-      expect.objectContaining({ signal: expect.any(AbortSignal) }),
+    // Once the provider has a client (#30). This asserted synchronously, with
+    // `expect.any(Object)` for the client, which a null matches: the request
+    // it saw went out with no client at all.
+    await waitFor(() =>
+      expect(api.autocomplete).toHaveBeenCalledWith(
+        expect.objectContaining({ send: expect.any(Function) }),
+        expect.objectContaining({
+          QueryText: "123 Main St",
+          Language: "fr",
+          MaxResults: 5,
+        }),
+        expect.objectContaining({ signal: expect.any(AbortSignal) }),
+      ),
     );
   });
 

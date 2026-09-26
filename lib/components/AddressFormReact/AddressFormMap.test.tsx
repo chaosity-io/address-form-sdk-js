@@ -145,7 +145,24 @@ describe("AddressFormMap — a refused map", () => {
     await waitFor(() => expect(shown()).toEqual(["Map rendering is currently unavailable."]));
   });
 
-  it("stays quiet on errors that are not a 403", async () => {
+  // A 401 used to return early like any other non-403, so a map the service
+  // refused for its token stayed blank with nothing said (#25).
+  it("says so for a 401: the service did not accept the map's token", async () => {
+    const { onError } = renderWith({ mapStyle: ["Standard", "Light"] });
+    onError({
+      error: {
+        status: 401,
+        url: "https://api.example.com/maps/Standard/descriptor",
+        body: new Blob([JSON.stringify({ message: "Unauthorized" })]),
+      },
+    });
+
+    await waitFor(() => expect(shown()).toEqual(["Map rendering is currently unavailable."]));
+    expect(logged().join("\n")).toMatch(/401/);
+    expect(logged().join("\n")).toMatch(/getConfig/);
+  });
+
+  it("stays quiet on errors that are not a 401 or a 403", async () => {
     const { onError } = renderWith({ mapStyle: ["Standard", "Light"] });
     onError({ error: { status: 404, body: new Blob(["{}"]) } });
     await new Promise((r) => setTimeout(r, 20));

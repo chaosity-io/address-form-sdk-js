@@ -37,3 +37,6 @@ jobs:
       - run: npm test
 
       - run: npm run build
+
+      # The built package, packed and loaded as an application loads it (#29).
+      - run: npm run test:dist

@@ -3,12 +3,7 @@ import type { Preview } from "@storybook/react-vite";
 import { QueryClientProvider } from "@tanstack/react-query";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { queryClient } from "../lib/utils/query-client";
-
-const getConfig = async () => ({
-  apiUrl: import.meta.env.STORYBOOK_API_URL || "https://api.chaosity.cloud",
-  token: import.meta.env.STORYBOOK_TOKEN || "demo-token",
-  expiresAt: Date.now() + 900_000,
-});
+import { getConfig } from "./get-config";
 
 const preview: Preview = {
   parameters: {

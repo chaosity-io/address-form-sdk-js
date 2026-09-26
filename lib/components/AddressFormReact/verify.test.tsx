@@ -3,7 +3,7 @@ import { act, fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useNotificationStore } from "../../stores/notificationStore";
-import { renderWithProvider } from "../../test/utils";
+import { renderWithProvider, untilClient } from "../../test/utils";
 import * as api from "../../utils/api";
 import { queryClient } from "../../utils/query-client";
 import type { AddressFormData } from "./AddressForm";
@@ -174,6 +174,7 @@ async function pick(...labels: string[]) {
  * fires with their values. Settled when the form has resolved the text to a place.
  */
 async function autofillWith(values: Record<string, string>) {
+  await untilClient();
   fireEvent.change(screen.getByRole("combobox"), { target: { value: values.addressLineOne } });
   fireEvent.change(screen.getByRole("textbox", { name: "City" }), { target: { value: values.city } });
   fireEvent.change(screen.getByRole("textbox", { name: "Postal code" }), { target: { value: values.postalCode } });
@@ -387,10 +388,16 @@ describe("<AddressForm verify>", () => {
       fireEvent.change(screen.getByRole("textbox", { name: "City" }), { target: { value: "Nowhere" } });
 
       // The handler's own promise: a throw inside it fails this test.
+      await untilClient();
       await act(async () => autofill?.({ addressLineOne: "1 Nowhere Rd", city: "Nowhere" }));
       const data = await (await submit(onSubmit))();
 
-      expect(apiName === "suggest" ? api.suggest : api.autocomplete).toHaveBeenCalled();
+      // The autofill's own lookup (one result), not the typeahead's.
+      expect(apiName === "suggest" ? api.suggest : api.autocomplete).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ QueryText: "1 Nowhere Rd, Nowhere", MaxResults: 1 }),
+        expect.anything(),
+      );
       expect(api.getPlace).not.toHaveBeenCalled();
       expect(fetchMock).not.toHaveBeenCalled();
       expect(data).not.toHaveProperty("verified");
