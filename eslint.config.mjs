@@ -28,6 +28,12 @@ export default defineConfig(
     },
   },
   {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
+  {
     files: ["lib/main.tsx", "lib/main-standalone.tsx"],
     rules: {
       "react-refresh/only-export-components": "off",

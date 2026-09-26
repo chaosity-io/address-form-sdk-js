@@ -34,8 +34,16 @@
 
       AddressForm.render({
         root: "#amazon-location-address-form",
-        apiKey: import.meta.env.VITE_APP_API_KEY,
-        region: import.meta.env.VITE_APP_REGION,
+        // VITE_API_URL and VITE_TOKEN, from .env (see .env.example). Unset, the
+        // form says in its banner that no API is configured, and asks nothing.
+        getConfig: async () => {
+          const apiUrl = import.meta.env.VITE_API_URL;
+          const token = import.meta.env.VITE_TOKEN;
+          if (!apiUrl || !token) {
+            throw new Error("no API is configured: set VITE_API_URL and VITE_TOKEN in .env");
+          }
+          return { apiUrl, token, expiresAt: Date.now() + 900_000 };
+        },
         onSubmit: async (getData) => {
           const data = await getData();
           console.log(data);

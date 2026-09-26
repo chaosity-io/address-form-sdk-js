@@ -17,6 +17,7 @@ import {
   VerifyAddressCommand,
 } from "@chaosity/location-client";
 import { useNotificationStore } from "../stores/notificationStore";
+import { DOCS } from "./docs";
 
 /**
  * Per-request transport options, forwarded to the client's `send`.
@@ -187,7 +188,6 @@ const handleApiError = (error: unknown, id: string, description: string) => {
   if (!message) return;
 
   const { addNotification } = useNotificationStore.getState();
-  const docsLink = "https://docs.chaosity.cloud/address-form";
 
   addNotification(
     {
@@ -196,7 +196,7 @@ const handleApiError = (error: unknown, id: string, description: string) => {
       type: "error",
     },
     () => {
-      console.error(`${description} failed. See ${docsLink} for troubleshooting.`, error);
+      console.error(`${description} failed. See ${DOCS} for troubleshooting.`, error);
     },
   );
   // NOTE: no throw here. This used to rethrow, and every caller rethrew again —

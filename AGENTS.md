@@ -18,6 +18,7 @@ npm test                 # vitest run --coverage
 npm run build            # BOTH builds: lib, then standalone
 npm run build:lib        # tsc -b && vite build
 npm run build:standalone # tsc -b && vite build --config vite.config.standalone.ts
+npm run test:dist        # after a build: pack the package and load it as an application does
 npm run lint             # eslint . AND prettier --check .
 npm run lint:fix         # eslint --fix . && prettier --write .
 ```
@@ -30,8 +31,8 @@ npm run lint:fix         # eslint --fix . && prettier --write .
 
 `.husky/pre-push` runs `npm ci --dry-run` (lockfile drift), `npm run lint`,
 `npm test`, then **`npm run build`** — which here is BOTH builds, lib and standalone, so a
-push takes a while and fails if either bundle breaks. Type errors that vitest
-tolerates are stopped here.
+push takes a while and fails if either bundle breaks — and last `npm run test:dist`
+on what the build produced. Type errors that vitest tolerates are stopped here.
 
 ## Two entry points, two builds
 
@@ -48,9 +49,68 @@ The standalone entry imports `maplibre-gl/dist/maplibre-gl.css` and the
 package's own stylesheet, because a non-React host has no bundler step to do it.
 The library entry deliberately does **not**: a React consumer controls its own
 CSS pipeline, and importing global CSS from a library entry breaks SSR builds.
+So the build extracts all of it, the form's styles and MapLibre's, into
+`dist/lib/address-form.css`, and the README's React example imports that file
+itself. Without the line, the example rendered its suggestion list over the
+fields and the map's controls as bare buttons (#29).
 
 Source lives in `lib/`. `src/` holds Storybook stories only — it is not the
 package.
+
+### The library is ESM and CommonJS, and `exports` picks
+
+`build:lib` emits `address-form-sdk.mjs` and `address-form-sdk.cjs.js`, and
+`package.json` `exports` sends `import` to the first and `require` to the
+second. Until #29 it was CommonJS only, and that broke the README's own
+example: client-react ships separate import and require builds, each calling
+`createContext`, so the provider an application imported and the one the
+form's hooks read were two copies, and the form threw "useLocationClient must
+be used within LocationClientProvider" under a provider it could not see. A
+dependency the library **bundles** has the same effect by another route: its
+copy is private, and nothing the application renders reaches it. That is why
+`@tanstack/react-query` is external in `vite.config.ts`. Anything holding a
+React context that an application might also provide stays external.
+
+Vitest cannot see any of this: it compiles `lib/` from source. So
+`scripts/smoke-dist.mjs` (`npm run test:dist`) packs the package, unpacks it
+beside this repo's installed dependencies, renders the README tree from ESM
+and from CommonJS, and fails on any package the library loads through its
+`require` build while it has an `import` build. It takes any `npm pack` spec
+too: `node scripts/smoke-dist.mjs @chaosity/address-form@0.5.0` shows the
+failure on the last CommonJS-only release.
+
+`./dist/*` is exported as it stands, so deep imports that worked before an
+`exports` map existed keep working, such as the stylesheet at
+`@chaosity/address-form/dist/lib/address-form.css`.
+
+**Both conditions share one set of declarations, `dist/lib/main.d.ts`**, and
+this package is not `"type": "module"`. So a TypeScript consumer on
+`moduleResolution: node16` or `nodenext` that imports from ESM gets the types
+as CommonJS. It compiles with `skipLibCheck`, which the Vite and Next.js
+templates set. With `skipLibCheck` off it reports one `TS1479` in
+`components/Map/index.d.ts`, and it did the same on 0.5.0, before `exports`
+existed. Consumers on `bundler` resolution are unaffected. A separate
+`main.d.mts` for the `import` condition would need rolled-up declarations,
+because a `.d.mts` needs file extensions on its relative imports. Accepted as
+it stands (26 Sep 2026); revisit if a `node16` consumer reports it.
+
+## A component that reads the provider handles `client: null`
+
+`useLocationClient()` returns `client: null` twice over: until the provider's
+first `getConfig` answers, and after one fails until a retry succeeds. Neither
+is a missing provider — `useLocationClient` itself throws for that. So:
+
+- never throw on a null client while rendering. The form used to, and one
+  failed `getConfig` unmounted every address field, and under `render()` the
+  page's own inputs too (#30). `getData()` rejecting at submit, when `verify`
+  has no client to verify with, is a rejection the integrator handles, not a
+  render;
+- never send with one, or with a token that is not there yet: no query, no
+  autofill lookup, no map. The typeahead's query is `skipToken` without a
+  client, and the map mounts only once one exists (#25);
+- the form says why in its banner (`LocationClientStatus`, mounted by
+  `AddressFormProvider`, so both forms carry it), and every field stays a
+  plain, typeable input.
 
 ## The `__`-prefixed exports are not public API
 
@@ -118,7 +178,7 @@ on a cold load and will not reproduce locally in a warm dev server.
 
 ```json
 "@chaosity/location-client": ">=0.10.0",
-"@chaosity/location-client-react": ">=0.2.0"
+"@chaosity/location-client-react": ">=0.8.0"
 ```
 
 `>=`, not `^`. Both of those are pre-1.0, and npm treats each `0.x` minor as
@@ -129,9 +189,19 @@ Each floor is the oldest release this package's own code and types work with,
 and it moves only when that changes. The client's went from `0.3.0` to
 `0.10.0` with `verify` (#21): `lib/utils/api.ts` imports `VerifyAddressCommand`,
 and the published types name `VerifyAddressResponse`, so below `0.10.0` a
-submit with `verify` on fails and the declaration files do not compile. The
-client-react floor did not move: the form reaches verify through `send`, which
-every supported client-react forwards.
+submit with `verify` on fails and the declaration files do not compile.
+client-react's went from `0.2.0` to `0.8.0` (#16, #30): the map builds its
+style from the `apiUrl` the provider puts on its context, which 0.8.0 added,
+and the form's banner promises that a failed `getConfig` is retried, which
+0.8.0 does.
+
+`@tanstack/react-query` is a peer too, and an ordinary caret one (`^5.25.0`),
+because it is past 1.0. It is a peer rather than a dependency so that the
+application and the library share one copy: the exported `Typeahead` and
+`LocateButton` read the application's `QueryClientProvider`, which a nested
+second copy cannot see (#29). The floor is the release that added `skipToken`,
+which the typeahead's query uses (#30). The devDependency is what this repo
+builds and tests with.
 
 The cost is that npm gives no warning when an upstream break lands; it surfaces
 at runtime in a consumer's app. So an upstream change to what this package
@@ -178,8 +248,10 @@ and the standalone bundle then carries two clients. Count them with
 
 - Styling is **vanilla-extract** (`.css.ts`), compiled at build time. Do not add
   a runtime CSS-in-JS library alongside it.
-- State: `zustand` stores in `lib/stores`, forms via `react-hook-form`, server
-  state via `@tanstack/react-query`. Reach for the one already in use.
+- State: `zustand` stores in `lib/stores`, form data in `AddressFormContext`
+  (`AddressFormProvider`), server state via `@tanstack/react-query`. Reach for
+  the one already in use. `react-hook-form` is declared but nothing imports it
+  (#33).
 - Tests are vitest with `lib/setup-tests.ts`; `lib/stories.test.tsx` renders the
   Storybook stories, so a broken story fails the suite.
 - Prettier runs with `prettier-plugin-organize-imports` — do not hand-sort

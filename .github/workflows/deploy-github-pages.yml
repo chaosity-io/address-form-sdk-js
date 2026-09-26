@@ -14,10 +14,6 @@ concurrency:
   group: pages
   cancel-in-progress: false
 
-env:
-  STORYBOOK_SDK_API_KEY: ${{ secrets.STORYBOOK_SDK_API_KEY }}
-  STORYBOOK_SDK_REGION: ${{ secrets.STORYBOOK_SDK_REGION }}
-
 jobs:
   build:
     runs-on: ubuntu-latest

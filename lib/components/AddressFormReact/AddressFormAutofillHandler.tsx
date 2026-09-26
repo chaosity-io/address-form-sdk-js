@@ -1,8 +1,8 @@
 import { GetPlaceAdditionalFeature } from "@chaosity/location-client";
+import { useLocationClient } from "@chaosity/location-client-react";
 import type { QueryClient } from "@tanstack/react-query";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import useAmazonLocationContext from "../../hooks/use-amazon-location-context";
 import type { LocationClientLike } from "../../utils/api";
 import type { AutofillValues } from "../../utils/detect-autofill";
 import { detectAutofill } from "../../utils/detect-autofill";
@@ -16,13 +16,15 @@ interface AddressFormAutofillHandlerProps {
 }
 
 export const AddressFormAutofillHandler = ({ form }: AddressFormAutofillHandlerProps) => {
-  const { client } = useAmazonLocationContext();
+  const { client } = useLocationClient();
   const { mapViewState, setMapViewState, setData, setIsAutofill, typeaheadApiName, language } = useAddressFormContext();
   const queryClient = useQueryClient();
   const handleAutofillRef = useRef<(values: AutofillValues) => Promise<void>>(undefined);
 
   handleAutofillRef.current = async (values: AutofillValues) => {
-    if (typeaheadApiName === null) {
+    // No client before the first getConfig answers, or after one fails: the
+    // browser's text stays as filled in, with no place behind it (#30).
+    if (typeaheadApiName === null || !client) {
       return;
     }
 

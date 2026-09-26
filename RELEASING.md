@@ -33,12 +33,13 @@ git push --delete origin v0.2.4 && git tag -d v0.2.4
 
 Both clients are declared twice. The **peer** ranges are deliberately wide, so a
 client minor never strands a consumer. A release moves one only when this
-package's own code needs a newer client, as `verify` did (see `AGENTS.md`):
+package's own code needs a newer client, as `verify` did for the client and
+the map's `apiUrl` did for client-react (see `AGENTS.md`):
 
 ```json
 "peerDependencies": {
   "@chaosity/location-client": ">=0.10.0",
-  "@chaosity/location-client-react": ">=0.2.0"
+  "@chaosity/location-client-react": ">=0.8.0"
 }
 ```
 
@@ -144,14 +145,15 @@ Two consequences worth knowing:
   on `main` would attempt a publish and fail red on the commits that are not
   releases.
 
-`npm publish` runs `prepublishOnly`, which runs `npm run build` — both the
-library and the standalone UMD bundle — so the tarball is produced whether or not
-a step names it.
+`npm publish` runs `prepublishOnly`, which runs `npm run build` — the library,
+as ESM and CommonJS, and the standalone UMD bundle — and then `npm run test:dist`,
+which packs the result and loads it the way an application does (#29). So the
+tarball is produced, and checked, whether or not a step names it.
 
 ## What ships in the tarball
 
 `"files": ["dist"]`, so the package contains `dist/`, `LICENSE`, `package.json`
-and `README.md` — 54 entries, and **no `.github/`**. Changing a workflow in this
+and `README.md`, and **no `.github/`**. `npm pack --dry-run` lists every entry. Changing a workflow in this
 repo is invisible to consumers and does not warrant a version bump.
 
 ## What publish.yml uses

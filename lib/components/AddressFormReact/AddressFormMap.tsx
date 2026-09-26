@@ -1,5 +1,6 @@
 import type { FunctionComponent } from "react";
 import { useNotificationStore } from "../../stores/notificationStore";
+import { DOCS } from "../../utils/docs";
 import type { MapProps } from "../Map";
 import { Map } from "../Map";
 import { getColorScheme, getMapStyleType } from "../Map/utils";
@@ -17,8 +18,6 @@ export type AddressFormMapProps = MapProps & Pick<MapMarkerProps, "adjustablePos
  * export, and an `undefined` would never match.
  */
 const FEATURE_NOT_ENTITLED = "FeatureNotEntitledException";
-
-const DOCS = "https://docs.chaosity.cloud/address-form";
 
 /**
  * The `{ code, message }` a refused map request carries, or nothing.
@@ -75,6 +74,25 @@ export const AddressFormMap: FunctionComponent<AddressFormMapProps> = ({
   const handleMapError = (error: unknown) => {
     if (!error || typeof error !== "object" || !("error" in error)) return;
     const innerError = error.error as { status?: number; body?: unknown };
+
+    // The service did not accept the token the map was sent with (#25). The map
+    // waits for the provider's token, so this is one the service refuses: a
+    // token for another API, or not a token at all. MapLibre does not ask
+    // again, and this used to return here like any other status, leaving a
+    // blank map and nothing said.
+    if (innerError?.status === 401) {
+      addNotification(
+        { id: "map-token-error", type: "error", message: "Map rendering is currently unavailable." },
+        () => {
+          console.error(
+            `Map rendering failed: the service refused the map's token (401). Check the token and apiUrl your getConfig returns. See ${DOCS} for setup instructions.`,
+            error,
+          );
+        },
+      );
+      return;
+    }
+
     if (innerError?.status !== 403) return;
 
     // A 403 is one of three things with three fixes: an Origin the application

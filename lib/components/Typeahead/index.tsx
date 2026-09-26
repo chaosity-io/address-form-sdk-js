@@ -1,11 +1,11 @@
 import type { Address } from "@chaosity/location-client";
 import { GetPlaceAdditionalFeature, type GetPlaceCommandOutput, type RelatedPlace } from "@chaosity/location-client";
+import { useLocationClient } from "@chaosity/location-client-react";
 import { Combobox, ComboboxInput, ComboboxOption, ComboboxOptions } from "@headlessui/react";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { countries } from "../../data/countries.ts";
-import useAmazonLocationContext from "../../hooks/use-amazon-location-context.ts";
 import { useDebounce } from "../../utils/debounce.ts";
 import { getPlaceQuery } from "../../utils/queries.ts";
 import { Input } from "../Input/index.tsx";
@@ -121,7 +121,9 @@ const APITypeahead = ({
   skipNextQuery,
 }: TypeaheadProps & { apiName: TypeaheadAPIName }) => {
   const debouncedValue = useDebounce(value, debounce);
-  const { client } = useAmazonLocationContext();
+  // Null until the provider's first getConfig answers, and after one fails
+  // until a retry succeeds. Meanwhile the field is a plain input (#30).
+  const { client } = useLocationClient();
   const queryClient = useQueryClient();
   const isValid = debouncedValue.length >= 2;
   const skipNextQueryRef = useRef(false);
@@ -194,7 +196,7 @@ const APITypeahead = ({
   );
 
   const handleAddressSelect = async (selected: TypeaheadResultItem | RelatedPlace | null) => {
-    if (!selected) return;
+    if (!selected || !client) return;
 
     // Handle secondary address selection — get full details for the secondary place
     if ("PlaceId" in selected && expanded) {
@@ -251,7 +253,9 @@ const APITypeahead = ({
   };
 
   const keepOpen = !!expanded || forceStatic;
-  const showDropdown = isValid || keepOpen;
+  // No client, no list: nothing has been looked up, and "No results." would say
+  // otherwise, both before the first token and after a failed getConfig (#30).
+  const showDropdown = (isValid && !!client) || keepOpen;
 
   return (
     <div className={clsx(className, base)}>

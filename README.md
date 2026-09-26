@@ -10,6 +10,8 @@ The SDK can be used inside a React app or as a standalone HTML/JavaScript compon
 
 You need a Chaosity Location Service account and a bearer token. Tokens are issued via your backend using the [Location Service API](https://docs.chaosity.cloud/api).
 
+The React library's peer dependencies are `@chaosity/location-client` `>=0.10.0`, `@chaosity/location-client-react` `>=0.8.0`, `@tanstack/react-query` `^5.25.0`, `react` `^19.0.0` and `react-dom` `^19.0.0`. The standalone bundle carries its own copies and needs none of them.
+
 ### Installation
 
 #### React
@@ -38,16 +40,22 @@ Include the CSS and script from the CDN:
 
 #### React
 
-Wrap your app with `LocationClientProvider` from `@chaosity/location-client-react`, then use `<AddressForm>` inside it.
+Wrap your app with `LocationClientProvider` from `@chaosity/location-client-react`, then use `<AddressForm>` inside it. Import the package's stylesheet once as well: the library leaves CSS to your bundler, and without it the suggestion list and the map's controls are unstyled.
+
+In a Next.js App Router project, put the example in a Client Component, a file that begins with `"use client"`. The form uses React context, which a Server Component cannot, and its `getConfig` and `onSubmit` are functions, which a Server Component cannot pass to a Client Component.
 
 ```jsx
 import React from "react";
 import { LocationClientProvider } from "@chaosity/location-client-react";
 import { AddressForm, Flex } from "@chaosity/address-form";
+import "@chaosity/address-form/dist/lib/address-form.css";
 
 async function getConfig() {
   // Fetch a token from your backend
   const res = await fetch("/api/location-token");
+  // Reject on an error status, so the form reports a failed getConfig
+  // instead of taking the error body for a configuration
+  if (!res.ok) throw new Error(`token route answered ${res.status}`);
   return res.json(); // { apiUrl, token, expiresAt }
 }
 
@@ -125,6 +133,7 @@ export default function App() {
         root: "#address-form",
         getConfig: async () => {
           const res = await fetch("/api/location-token");
+          if (!res.ok) throw new Error(`token route answered ${res.status}`);
           return res.json(); // { apiUrl, token, expiresAt }
         },
         onSubmit: async (getData) => {
@@ -274,12 +283,16 @@ All fields use `data-type="address-form"` plus a `name` attribute.
 
 Map component for previewing and adjusting the selected address location.
 
-| Property                | Type      | HTML Attribute                 | Default | Description                                                                                                   |
-| ----------------------- | --------- | ------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------- |
-| `mapStyle`              | `array`   | `data-map-style`               | -       | Map style (see below)                                                                                         |
-| `showNavigationControl` | `boolean` | `data-show-navigation-control` | `true`  | Show map navigation controls                                                                                  |
-| `adjustablePosition`    | `boolean` | `data-adjustable-position`     | `true`  | Allow users to drag the location pin                                                                          |
-| `politicalView`         | `string`  | -                              | -       | A country's view of disputed borders on the map (ISO 3166-1 alpha-3). Needs the `political-view` plan feature |
+| Property                | Type      | HTML Attribute                 | Default                | Description                                                                                                   |
+| ----------------------- | --------- | ------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `mapStyle`              | `array`   | `data-map-style`               | -                      | Map style (see below)                                                                                         |
+| `showNavigationControl` | `boolean` | `data-show-navigation-control` | `true`                 | Show map navigation controls                                                                                  |
+| `adjustablePosition`    | `boolean` | `data-adjustable-position`     | `true`                 | Allow users to drag the location pin                                                                          |
+| `politicalView`         | `string`  | -                              | -                      | A country's view of disputed borders on the map (ISO 3166-1 alpha-3). Needs the `political-view` plan feature |
+| `apiUrl`                | `string`  | -                              | `getConfig`'s `apiUrl` | The API the map's style and tiles come from. Set it only to override the one your `getConfig` returns         |
+
+The map asks for nothing until the provider has its first token, so it appears
+a moment after the fields rather than requesting its style without one.
 
 #### Map Style Options
 
@@ -303,7 +316,7 @@ a style you did not choose would hide the reason.
 API errors (autocomplete, suggest, place detail, and verification when `verify` is on) are handled automatically:
 
 - A notification banner appears inside the form describing the failure
-- The error is logged to `console.error` with a link to [troubleshooting docs](https://docs.chaosity.cloud/address-form)
+- The error is logged to `console.error` with a link to [troubleshooting docs](https://docs.chaosity.cloud/docs/client-libraries/address-form)
 - The error is re-thrown so you can handle it in your own code if needed
 
 A map the service refuses reads the refusal before choosing its words. When
@@ -313,16 +326,26 @@ Hybrid or Satellite style (plan feature `satellite`), or the map's
 `FeatureNotEntitledException`, and the form shows its message, which names the
 feature, with what to change. Any other refusal of the map — an origin the
 application does not allow, a plan without maps — shows "Map rendering is
-currently unavailable." and logs a pointer to the setup instructions.
+currently unavailable." and logs a pointer to the setup instructions. So does a
+map the service refuses for its token (a 401), and the log says to check the
+token and `apiUrl` your `getConfig` returns.
 
-If `getConfig` fails or returns an expired token, the `LocationClientProvider` will call `getConfig` again on the next request. No manual retry logic is needed.
+If `getConfig` fails, the form stays usable as a plain form. Every field can
+still be typed in, the banner says that address suggestions are unavailable and
+why, the locate button is disabled, and the map waits. The
+`LocationClientProvider` retries `getConfig` on its own
+([Token Refresh](https://github.com/chaosity-io/location-service-client-react#token-refresh)),
+and its first success brings suggestions and the map back without a reload. No
+retry logic is needed on your side. A token refresh that fails while the form
+already has a token shows nothing: requests go on with that token until it
+expires.
 
 ## Logging
 
 Errors are logged to `console.error` with context:
 
 ```
-Address autocomplete failed. See https://docs.chaosity.cloud/address-form for troubleshooting. Error: ...
+Address autocomplete failed. See https://docs.chaosity.cloud/docs/client-libraries/address-form for troubleshooting. Error: ...
 ```
 
 For deeper debugging of token refresh and API calls, enable debug logging on the underlying client libraries:
