@@ -34,7 +34,7 @@
  * no effect, so `getConfig` is never called and nothing touches the network.
  */
 import { execFileSync, spawnSync } from "node:child_process";
-import { mkdirSync, mkdtempSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -56,7 +56,7 @@ const readmeTree = () =>
           h(Flex, { direction: "row" },
             h("button", { "data-type": "address-form", type: "submit" }, "Submit"),
             h("button", { "data-type": "address-form", type: "reset" }, "Reset"))),
-        h(AddressForm.Map, { mapStyle: ["Standard", "Light"] }))));
+        h(AddressForm.Map, { mapStyle: ["Standard", "Light"], workerUrl: "/maplibre/maplibre-gl-worker.mjs" }))));
 
 let failed = false;
 const check = (label, element, expect) => {
@@ -205,6 +205,28 @@ try {
       mkdirSync(dirname(at), { recursive: true });
       symlinkSync(join(installed, name), at, "dir");
     }
+  }
+
+  // The standalone bundle carries MapLibre, so a page runs the copy it was
+  // built with, whatever it installs itself. That copy must be the installed
+  // one, and at least 6.4.1: GHSA-jrc7-96c5-q579 is fixed in no earlier release.
+  // The bundle names MapLibre's version as one string literal, as it does
+  // React's, so this looks for the installed version among them.
+  try {
+    const maplibre = JSON.parse(readFileSync(join(root, "node_modules/maplibre-gl/package.json"), "utf8")).version;
+    const bundle = readFileSync(join(packageDir, "dist/standalone/address-form-sdk.umd.js"), "utf8");
+    const [major, minor, patch] = maplibre.split(".").map(Number);
+    if (major < 6 || (major === 6 && (minor < 4 || (minor === 4 && patch < 1)))) {
+      throw new Error(`the installed maplibre-gl is ${maplibre}, below 6.4.1`);
+    }
+    if (!bundle.includes(`\`${maplibre}\``) && !bundle.includes(`"${maplibre}"`)) {
+      const carried = [...new Set(bundle.match(/[`"]\d+\.\d+\.\d+[`"]/g) ?? [])].join(", ");
+      throw new Error(`the standalone bundle does not carry maplibre-gl ${maplibre} (it names ${carried})`);
+    }
+    console.log("ok      standalone: carries maplibre-gl " + maplibre);
+  } catch (error) {
+    failed = true;
+    console.log("FAILED  standalone: " + (error instanceof Error ? error.message : error));
   }
 
   writeFileSync(join(scratch, "esm.mjs"), ESM_CONSUMER);

@@ -1,9 +1,14 @@
 import { LocationClientProvider } from "@chaosity/location-client-react";
 import type { Preview } from "@storybook/react-vite";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { setWorkerUrl } from "maplibre-gl";
+import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { queryClient } from "../lib/utils/query-client";
 import { getConfig } from "./get-config";
+
+// MapLibre 6 finds no worker under a bundler until it is told where one is.
+setWorkerUrl(workerUrl);
 
 const preview: Preview = {
   parameters: {

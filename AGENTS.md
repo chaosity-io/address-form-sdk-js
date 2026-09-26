@@ -57,6 +57,28 @@ fields and the map's controls as bare buttons (#29).
 Source lives in `lib/`. `src/` holds Storybook stories only — it is not the
 package.
 
+### MapLibre's worker
+
+maplibre-gl 6 runs its worker from a module file, `maplibre-gl-worker.mjs`,
+which imports `maplibre-gl-shared.mjs` from beside it. It finds that file from
+its own `import.meta.url`, which a bundler rewrites and a UMD build replaces
+with `{}`, and without it the map mounts and draws no tile. So:
+
+- the React library cannot know where an application serves the file, and
+  `AddressForm.Map` takes `workerUrl`, which react-map-gl hands to
+  `setWorkerUrl` before it builds the map. The README's example passes it;
+- the standalone bundle carries the worker. `vite-plugin-maplibre-worker.ts`
+  bundles it and the chunk it imports into one module string, and
+  `main-standalone.tsx` hands MapLibre a `blob:` URL of it. Both Vite configs
+  load the plugin, because `npm run dev` serves the standalone entry too. A
+  page with a Content Security Policy needs `worker-src blob:`, as it did for
+  maplibre 5's UMD build;
+- Storybook sets the worker in `.storybook/preview.tsx` with Vite's
+  `?worker&url`.
+
+`lib/maplibre-6.test.ts` holds the README's maps to `workerUrl` and the
+standalone entry to its `setWorkerUrl` call.
+
 ### The library is ESM and CommonJS, and `exports` picks
 
 `build:lib` emits `address-form-sdk.mjs` and `address-form-sdk.cjs.js`, and
@@ -164,6 +186,13 @@ goes through `send`.
 
 ## Version floors that exist for a reason
 
+**`maplibre-gl` must stay at or above `6.4.1`**, the first release that fixes
+GHSA-jrc7-96c5-q579, a critical XSS in the attribution control. There is no 5.x
+fix. It is a dependency, so the range is what every React consumer installs,
+and the standalone bundle carries whichever copy the lockfile installed.
+`lib/maplibre-6.test.ts` holds the range and every lockfile copy to it, and
+`npm run test:dist` checks that the built bundle carries the installed copy.
+
 **`@headlessui/react` must stay at or above `2.2.10`.** Versions up to `2.2.9`
 throw a `DataInteractive` Fragment error on cold loads under React 19 with a
 React-Server-Components host — which is exactly how this SDK gets consumed. The
@@ -177,8 +206,8 @@ on a cold load and will not reproduce locally in a warm dev server.
 ## Peer ranges are open on purpose
 
 ```json
-"@chaosity/location-client": ">=0.10.0",
-"@chaosity/location-client-react": ">=0.8.0"
+"@chaosity/location-client": ">=0.11.0",
+"@chaosity/location-client-react": ">=0.9.0"
 ```
 
 `>=`, not `^`. Both of those are pre-1.0, and npm treats each `0.x` minor as
@@ -186,14 +215,20 @@ incompatible — a caret range would refuse every upstream release after the
 pinned minor and force a lockstep bump here for each one.
 
 Each floor is the oldest release this package's own code and types work with,
-and it moves only when that changes. The client's went from `0.3.0` to
+or that this package's own dependencies can install beside, and it moves only
+when that changes. The client's went from `0.3.0` to
 `0.10.0` with `verify` (#21): `lib/utils/api.ts` imports `VerifyAddressCommand`,
 and the published types name `VerifyAddressResponse`, so below `0.10.0` a
 submit with `verify` on fails and the declaration files do not compile.
 client-react's went from `0.2.0` to `0.8.0` (#16, #30): the map builds its
 style from the `apiUrl` the provider puts on its context, which 0.8.0 added,
 and the form's banner promises that a failed `getConfig` is retried, which
-0.8.0 does.
+0.8.0 does. Then both moved again, for a dependency rather than for code:
+this package depends on `maplibre-gl` 6, and npm refuses to install it beside
+client below `0.11.0` or client-react below `0.9.0`, whose peer ranges admit
+only MapLibre 5 (ERESOLVE, measured). So `0.11.0` and `0.9.0` are the oldest
+releases an install can have, and the floors say so rather than leaving npm to
+name the MapLibre peer.
 
 `@tanstack/react-query` is a peer too, and an ordinary caret one (`^5.25.0`),
 because it is past 1.0. It is a peer rather than a dependency so that the
