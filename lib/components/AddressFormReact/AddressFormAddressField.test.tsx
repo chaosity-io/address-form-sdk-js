@@ -333,7 +333,7 @@ describe("AddressFormAddressField", () => {
       expect(mockGeolocation.getCurrentPosition).toHaveBeenCalled();
     });
 
-    // Verify reverseGeocode was called with coordinates (apiName="autocomplete" uses Core path)
+    // Verify reverseGeocode was called with coordinates (apiName="autocomplete" takes the reverse-geocode path)
     await waitFor(() => {
       expect(api.reverseGeocode).toHaveBeenCalledWith(
         expect.any(Object), // client
@@ -345,7 +345,7 @@ describe("AddressFormAddressField", () => {
       );
     });
 
-    // Verify getPlace was called with the place ID from suggest
+    // Verify getPlace was called with the place ID from reverseGeocode
     await waitFor(() => {
       expect(api.getPlace).toHaveBeenCalledWith(
         expect.any(Object), // client

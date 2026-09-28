@@ -39,7 +39,7 @@ export function LocateButton({ onLocate, apiName, className = "", ...restProps }
         let placeId: string | undefined;
 
         if (apiName === "autocomplete") {
-          // Core plan: use reverse geocode to get address from coordinates
+          // Autocomplete mode: reverse geocode the coordinates to an address
           const reverseResult = await queryClient.ensureQueryData(
             reverseGeocodeQuery(client, {
               QueryPosition: [longitude, latitude],
@@ -48,7 +48,7 @@ export function LocateButton({ onLocate, apiName, className = "", ...restProps }
           );
           placeId = reverseResult.ResultItems?.[0]?.PlaceId;
         } else {
-          // Pro plan (default): use suggest with bias position
+          // Suggest mode (any apiName but "autocomplete"): suggest, biased to the position
           const suggestResult = await queryClient.ensureQueryData(
             suggestQuery(client, {
               QueryText: `${latitude},${longitude}`,

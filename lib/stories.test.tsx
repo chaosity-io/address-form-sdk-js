@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import previewAnnotations from "../.storybook/preview";
 
 /**
- * Every story must at least render (#3 / T35).
+ * Every story must at least render (#3).
  *
  * Nine story files existed and none of them was ever executed by a test, so a
  * story could throw on mount and nothing would notice — the failure surfaces as
@@ -19,8 +19,8 @@ import previewAnnotations from "../.storybook/preview";
  * with @storybook/react-vite, which is already here.
  *
  * This is a smoke test on purpose. It proves each story mounts and produces
- * output; it does not assert behaviour, which is what the 220 tests around it
- * are for.
+ * output; it does not assert behaviour, which is what the tests around it are
+ * for.
  */
 
 setProjectAnnotations(previewAnnotations);

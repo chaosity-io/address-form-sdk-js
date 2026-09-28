@@ -31,9 +31,9 @@ export const useTypeaheadQuery = ({ client, apiName, apiInput, enabled }: UseTyp
     // already typed past, and a slow early response can land AFTER a fast
     // later one and overwrite the list with stale results.
     //
-    // The sibling helpers in utils/queries.ts have done this since T31; this
-    // hook was the one path left that did not, and it is the one that fires on
-    // every keystroke (#2 / T34).
+    // The sibling helpers in utils/queries.ts already forward it; this hook
+    // was the one path left that did not, and it is the one that fires on
+    // every keystroke (#2).
     //
     // No client, no query: before the provider's first getConfig answers, and
     // after one fails until a retry succeeds. A skipped query caches nothing, so
