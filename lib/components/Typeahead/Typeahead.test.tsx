@@ -76,7 +76,7 @@ describe("Typeahead Component", () => {
         expect.any(Object), // client object
         expect.objectContaining({ QueryText: "test address", MaxResults: 5 }),
         // React Query's AbortSignal, forwarded so a superseded keystroke is
-        // cancelled rather than billed and raced (#2 / T34).
+        // cancelled rather than billed and raced (#2).
         expect.objectContaining({ signal: expect.any(AbortSignal) }),
       );
     });

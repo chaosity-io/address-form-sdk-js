@@ -459,7 +459,7 @@ describe("useTypeaheadQuery", () => {
     });
   });
 
-  describe("cancellation (#2 / T34)", () => {
+  describe("cancellation (#2)", () => {
     /**
      * The reason this hook needs the signal at all.
      *
