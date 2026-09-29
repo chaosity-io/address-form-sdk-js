@@ -42,7 +42,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@chaosity/location-client": "^0.11.0",
+    "@chaosity/location-client": "^0.12.0",
     "@chaosity/location-client-react": "^0.9.0",
     "@eslint/js": "^10",
     "@storybook/react-vite": "^10",
