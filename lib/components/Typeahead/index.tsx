@@ -68,9 +68,10 @@ const getSecondaryDesignator = (result: GetPlaceCommandOutput): string | undefin
  * Builds TypeaheadOutput from a GetPlace result.
  *
  * `placeId` is the PlaceId that was chosen and sent, never `result.PlaceId`
- * (#21). Asked for a unit, Amazon answers with a different PlaceId, which no
- * Places route accepts back — GetPlace and verify both fail upstream. The one
- * sent was just resolved, so it is known good.
+ * (#21). Asked for a unit, Amazon answered with a different PlaceId that no
+ * Places route accepted back. The service answered with the one sent when
+ * measured on 3 Oct 2026, but the one sent was just resolved, so it is known
+ * good whatever it answers.
  */
 const buildOutput = (result: GetPlaceCommandOutput, fallbackTitle: string, placeId: string): TypeaheadOutput => {
   const [lng, lat] = result.Position ?? [];
@@ -99,6 +100,9 @@ const buildOutput = (result: GetPlaceCommandOutput, fallbackTitle: string, place
 export const Typeahead = ({ apiName, ...props }: TypeaheadProps) => {
   return apiName ? <APITypeahead {...props} apiName={apiName} /> : <InputTypeahead {...props} apiName={null} />;
 };
+
+/** The Combobox value of the building's own row in its expanded list of units. */
+const BUILDING_ROW = Symbol("building");
 
 interface ExpandedState {
   result: GetPlaceCommandOutput;
@@ -195,8 +199,16 @@ const APITypeahead = ({
     [onSelect, queryClient],
   );
 
-  const handleAddressSelect = async (selected: TypeaheadResultItem | RelatedPlace | null) => {
+  const handleAddressSelect = async (selected: TypeaheadResultItem | RelatedPlace | typeof BUILDING_ROW | null) => {
     if (!selected || !client) return;
+
+    // The building's own row, in the list of its units: complete with the
+    // output already built for it (#32). Sending it back through the primary
+    // branch would run GetPlace again and expand the same units.
+    if (selected === BUILDING_ROW) {
+      if (expandedRef.current) completeSelection(expandedRef.current.output);
+      return;
+    }
 
     // Handle secondary address selection — get full details for the secondary place
     if ("PlaceId" in selected && expanded) {
@@ -320,16 +332,8 @@ const APITypeahead = ({
                   <span aria-hidden="true">&larr;</span> Back to results
                 </div>
 
-                {/* Parent address — select without a specific unit */}
-                <ComboboxOption
-                  value={
-                    expanded.result.SecondaryAddresses?.[0]
-                      ? ({ placeId: expanded.output.placeId, title: expanded.title } as TypeaheadResultItem)
-                      : null
-                  }
-                  className={clsx(option, "aws-typeahead-results__option")}
-                  disabled
-                >
+                {/* The building itself, for an address at the building rather than in a unit (#32) */}
+                <ComboboxOption value={BUILDING_ROW} className={clsx(option, "aws-typeahead-results__option")}>
                   <div className={optionRow}>
                     <span className={optionLabel}>{expanded.output.addressLineOneField}</span>
                   </div>

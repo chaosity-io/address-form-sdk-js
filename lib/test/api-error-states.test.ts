@@ -22,11 +22,12 @@ const clientThatThrows = (error: unknown) =>
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   }) as any;
 
-const clientError = (code: string, statusCode?: number) =>
+const clientError = (code: string, statusCode?: number, retryAfterMs?: number) =>
   Object.assign(new Error(code), {
     name: "LocationServiceException",
     code,
     statusCode,
+    retryAfterMs,
   });
 
 let added: { id: string; message: string; type: string }[];
@@ -61,6 +62,37 @@ describe("each failure class says something different and true", () => {
     await expect(suggest(client, { QueryText: "a" })).rejects.toBeTruthy();
     expect(added[0].message).toContain("Too many requests");
     expect(added[0].message).not.toContain("currently unavailable");
+  });
+
+  // The API refuses an application over its own rate with a 429
+  // RateLimitExceededException, and an address over the token route's limit
+  // with a 429 IpRateLimitExceededException. Only ThrottlingException used to
+  // get the wait text; the other two read as an outage (#42). A 429 under any
+  // other code is the same answer, and so is each code without its status.
+  it.each([
+    ["RateLimitExceededException", 429],
+    ["IpRateLimitExceededException", 429],
+    ["ThrottlingException", 429],
+    ["SomeFutureLimitException", 429],
+    ["RateLimitExceededException", undefined],
+    ["IpRateLimitExceededException", undefined],
+  ])("says to wait, not that we are broken, for %s (status %s)", async (code, status) => {
+    const client = clientThatThrows(clientError(code, status));
+    await expect(suggest(client, { QueryText: "a" })).rejects.toBeTruthy();
+    expect(added[0].message).toContain("Too many requests");
+    expect(added[0].message).not.toContain("currently unavailable");
+  });
+
+  // The wait the service asked for, when its 429 carried a Retry-After (#42).
+  it.each([
+    [30_000, "in about 30 seconds"],
+    [1, "in about 1 second"],
+    [undefined, "in a moment"],
+    [0, "in a moment"],
+  ])("says how long to wait when the service said: retryAfterMs %s", async (retryAfterMs, wait) => {
+    const client = clientThatThrows(clientError("RateLimitExceededException", 429, retryAfterMs));
+    await expect(suggest(client, { QueryText: "a" })).rejects.toBeTruthy();
+    expect(added[0].message).toBe(`Too many requests. Address suggestions will be available again ${wait}.`);
   });
 
   it("points at application configuration on 403, not at our uptime", async () => {

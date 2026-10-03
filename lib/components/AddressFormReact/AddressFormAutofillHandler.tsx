@@ -57,9 +57,10 @@ export const AddressFormAutofillHandler = ({ form }: AddressFormAutofillHandlerP
     setData({
       // The place the browser's text resolved to — the one the map pin and
       // `addressDetails` already show — so `verify` can verify it (#21). The
-      // PlaceId sent, not GetPlace's answer: for a unit those differ, and only
-      // this one resolves again. Writing it snapshots the fields as they stand,
-      // so a hand edit afterwards still means no verify.
+      // PlaceId sent, not GetPlace's answer: the service answered with the same
+      // one when measured on 3 Oct 2026, but the one sent is known to resolve,
+      // whatever it answers. Writing it snapshots the fields as they stand, so
+      // a hand edit afterwards still means no verify.
       placeId,
       country: placeResponse.Address?.Country?.Code2, // This override is required since user might have the country name instead of the code in the saved autofill
       originalPosition: placeResponse.Position?.join(","),

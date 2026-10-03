@@ -34,7 +34,7 @@ vi.mock("../../utils/detect-autofill", () => ({
 }));
 
 // MapLibre needs WebGL, which jsdom has not got; the map is not the subject here.
-vi.mock("react-map-gl/maplibre", () => ({
+vi.mock("@vis.gl/react-maplibre", () => ({
   default: ({ children }: { children?: React.ReactNode }) => <div data-testid="maplibre-map">{children}</div>,
   NavigationControl: () => null,
   Marker: () => null,

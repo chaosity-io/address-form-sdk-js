@@ -44,7 +44,17 @@ Include the CSS and script from the CDN. The bundle carries MapLibre and its wor
 
 Wrap your app with `LocationClientProvider` from `@chaosity/location-client-react`, then use `<AddressForm>` inside it. Import the package's stylesheet once as well: the library leaves CSS to your bundler, and without it the suggestion list and the map's controls are unstyled.
 
-In a Next.js App Router project, put the example in a Client Component, a file that begins with `"use client"`. The form uses React context, which a Server Component cannot, and its `getConfig` and `onSubmit` are functions, which a Server Component cannot pass to a Client Component.
+In a Next.js App Router project, put the example in a Client Component, a file that begins with `"use client"`: its `getConfig` and `onSubmit` are functions, which a Server Component cannot pass to a Client Component. The package's own entry is a client module, so a Server Component can import it as well, and render `LocationClientProvider` and `<AddressForm>` with a Server Action as `getConfig`. A form that handles its own submission needs `onSubmit`, and so a Client Component.
+
+A Server Component that needs the country list or a helper (`countries`, `getIncludeCountriesFilter`, `getColorScheme`, `getMapStyleType`) imports it from `@chaosity/address-form/data`, which loads nothing from React. From the package's main entry, a Server Component gets each of them as a client reference, not a value, and no error says so: there, `countries.length` reads 0 (measured with Next.js 15.5).
+
+```tsx
+import { countries } from "@chaosity/address-form/data";
+
+export default function Page() {
+  return <p>{countries.length} countries</p>;
+}
+```
 
 The map runs MapLibre's worker from a file your application serves, and `AddressForm.Map` takes its URL as `workerUrl`. Without it the map mounts and draws nothing. Copy `maplibre-gl-worker.mjs` and `maplibre-gl-shared.mjs` from `node_modules/maplibre-gl/dist/` into `public/maplibre/` before every build and dev run: [The MapLibre worker](https://github.com/chaosity-io/location-service-client#the-maplibre-worker) in `@chaosity/location-client`'s README has the script. The example serves them from there. Under Vite you can copy nothing, and pass `import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"` as `workerUrl` instead.
 
@@ -239,9 +249,8 @@ onSubmit: async (getData) => {
   per form: submitting the same selection again reuses the first answer.
 - To verify a unit, pick it from the building's list of units. A unit typed
   into address line two is not verified.
-- Keep `placeId` beside `verification`. The answer's own `PlaceId` can differ,
-  and for a unit it does. The service does not accept that one back, while
-  `placeId` verifies again.
+- `verification.PlaceId` is the `placeId` the form sent, for a building and
+  for a unit alike, and it verifies again.
 - An address the browser autofills is resolved to its best match — the place
   the map pin and `addressDetails` already show — and that match is what is
   verified. Compare `verification.Address` with the fields if the difference
@@ -272,7 +281,7 @@ All fields use `data-type="address-form"` plus a `name` attribute.
 | ---------------------------- | ----------------- | -------------------------------------------------------------------- |
 | `label`                      | `"Address"`       | Field label                                                          |
 | `placeholder`                | `"Enter address"` | Placeholder text                                                     |
-| `data-api-name`              | `"suggest"`       | API: `suggest` (addresses + POIs) or `autocomplete` (addresses only) |
+| `data-api-name`              | `"autocomplete"`  | API: `suggest` (addresses + POIs) or `autocomplete` (addresses only) |
 | `data-show-current-location` | `"true"`          | Show locate button using browser Geolocation API                     |
 
 #### Other Fields

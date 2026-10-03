@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { Map } from "./index";
 
-vi.mock("react-map-gl/maplibre", () => ({
+vi.mock("@vis.gl/react-maplibre", () => ({
   default: vi.fn(({ mapStyle }) => <div data-testid="mock-maplibre-map" data-mapstyle={mapStyle} />),
   NavigationControl: vi.fn(() => null),
 }));

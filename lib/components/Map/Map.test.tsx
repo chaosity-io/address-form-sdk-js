@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderWithProvider } from "../../test/utils";
 import { Map } from "./index";
 
-vi.mock("react-map-gl/maplibre", () => {
+vi.mock("@vis.gl/react-maplibre", () => {
   return {
     default: vi.fn(({ children, mapStyle }) => (
       <div data-testid="mock-maplibre-map" data-mapstyle={mapStyle}>

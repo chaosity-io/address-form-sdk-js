@@ -6,7 +6,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as api from "../../utils/api";
-import { queryClient } from "../../utils/query-client";
+import { createQueryClient } from "../../utils/query-client";
 import type { TypeaheadAPIName } from "./use-typeahead-query";
 import { useTypeaheadQuery } from "./use-typeahead-query";
 
@@ -15,6 +15,9 @@ vi.mock("../../utils/api", () => ({
   autocomplete: vi.fn(),
   suggest: vi.fn(),
 }));
+
+// The test's own client, as each form has its own.
+const queryClient = createQueryClient();
 
 // Regular function so vi.clearAllMocks() cannot clear its implementation
 const mockGetConfig = () =>
@@ -416,46 +419,93 @@ describe("useTypeaheadQuery", () => {
   });
 
   describe("query key generation", () => {
+    /** The keys the cache holds for the typeahead, after these hooks mounted. */
+    const typeaheadKeys = () =>
+      queryClient
+        .getQueryCache()
+        .findAll({ queryKey: ["typeahead"] })
+        .map((q) => q.queryKey);
+
     it("should generate different query keys for different api types", () => {
-      const { result: autocompleteResult } = renderHook(
-        () => useTypeaheadQuery({ client: mockClient, apiName: "autocomplete", enabled: false }),
-        { wrapper: createWrapper(mockClient) },
-      );
+      renderHook(() => useTypeaheadQuery({ client: mockClient, apiName: "autocomplete", enabled: false }), {
+        wrapper: createWrapper(mockClient),
+      });
+      renderHook(() => useTypeaheadQuery({ client: mockClient, apiName: "suggest", enabled: false }), {
+        wrapper: createWrapper(mockClient),
+      });
 
-      const { result: suggestResult } = renderHook(
-        () => useTypeaheadQuery({ client: mockClient, apiName: "suggest", enabled: false }),
-        { wrapper: createWrapper(mockClient) },
-      );
-
-      // Both should be different instances since they have different query keys
-      expect(autocompleteResult.current).not.toBe(suggestResult.current);
+      expect(typeaheadKeys()).toHaveLength(2);
     });
 
     it("should generate different query keys for different input parameters", () => {
-      const { result: result1 } = renderHook(
-        () =>
-          useTypeaheadQuery({
-            client: mockClient,
-            apiName: "autocomplete",
-            apiInput: { QueryText: "test1" },
-            enabled: false,
-          }),
+      for (const QueryText of ["test1", "test2"]) {
+        renderHook(
+          () =>
+            useTypeaheadQuery({ client: mockClient, apiName: "autocomplete", apiInput: { QueryText }, enabled: false }),
+          { wrapper: createWrapper(mockClient) },
+        );
+      }
+
+      expect(typeaheadKeys()).toHaveLength(2);
+    });
+  });
+
+  // The key used to be ["typeahead", apiName, QueryText], so the same text
+  // under another country filter, language or political view was answered
+  // from the cache with the list for the first one, for 30 minutes and across
+  // every form on the page (#31). Everything that shapes the request is in the
+  // key now, except BiasPosition, which the map-view invalidation handles.
+  describe("the cache key covers everything that shapes the request (#31)", () => {
+    const answer = (label: string): AutocompleteCommandOutput => ({
+      ResultItems: [{ PlaceId: label, Address: { Label: label }, PlaceType: "PointAddress", Title: label }],
+      PricingBucket: "bucket1",
+      $metadata: {},
+    });
+
+    const ask = async (apiInput: Parameters<typeof useTypeaheadQuery>[0]["apiInput"]) => {
+      const { result, unmount } = renderHook(
+        () => useTypeaheadQuery({ client: mockClient, apiName: "autocomplete", apiInput, enabled: true }),
         { wrapper: createWrapper(mockClient) },
       );
+      await waitFor(() => expect(result.current.isSuccess).toBe(true));
+      const data = result.current.data;
+      unmount();
+      return data;
+    };
 
-      const { result: result2 } = renderHook(
-        () =>
-          useTypeaheadQuery({
-            client: mockClient,
-            apiName: "autocomplete",
-            apiInput: { QueryText: "test2" },
-            enabled: false,
-          }),
-        { wrapper: createWrapper(mockClient) },
-      );
+    it.each([
+      ["Filter.IncludeCountries", { Filter: { IncludeCountries: ["GB"] } }],
+      ["Language", { Language: "fr" }],
+      ["PoliticalView", { PoliticalView: "IND" }],
+      ["MaxResults", { MaxResults: 3 }],
+    ])("asks again when only %s changes, and does not show the first list", async (_name, change) => {
+      vi.mocked(api.autocomplete).mockResolvedValueOnce(answer("unfiltered")).mockResolvedValueOnce(answer("changed"));
 
-      // Both should be different instances since they have different query keys
-      expect(result1.current).not.toBe(result2.current);
+      const first = await ask({ QueryText: "10 High St" });
+      const second = await ask({ QueryText: "10 High St", ...change });
+
+      expect(api.autocomplete).toHaveBeenCalledTimes(2);
+      expect(vi.mocked(api.autocomplete).mock.calls[1][1]).toMatchObject(change);
+      expect(first?.map((r) => r.title)).toEqual(["unfiltered"]);
+      expect(second?.map((r) => r.title)).toEqual(["changed"]);
+    });
+
+    it("answers from the cache when only BiasPosition changes", async () => {
+      vi.mocked(api.autocomplete).mockResolvedValue(answer("one"));
+
+      await ask({ QueryText: "10 High St", BiasPosition: [151.2, -33.8] });
+      await ask({ QueryText: "10 High St", BiasPosition: [151.3, -33.9] });
+
+      expect(api.autocomplete).toHaveBeenCalledTimes(1);
+    });
+
+    it("is still matched by the ['typeahead'] prefix every invalidation uses", async () => {
+      vi.mocked(api.autocomplete).mockResolvedValue(answer("one"));
+      await ask({ QueryText: "10 High St", Filter: { IncludeCountries: ["GB"] }, Language: "en" });
+
+      expect(queryClient.getQueryCache().findAll({ queryKey: ["typeahead"] })).toHaveLength(1);
+      queryClient.removeQueries({ queryKey: ["typeahead"] });
+      expect(queryClient.getQueryCache().findAll({ queryKey: ["typeahead"] })).toHaveLength(0);
     });
   });
 

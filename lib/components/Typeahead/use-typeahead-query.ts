@@ -21,9 +21,17 @@ export interface TypeaheadResultItem {
 }
 
 export const useTypeaheadQuery = ({ client, apiName, apiInput, enabled }: UseTypeaheadParams) => {
+  // Everything that shapes the request, except BiasPosition: the map moving
+  // invalidates the typeahead itself (Typeahead's map-view effect), so a pan
+  // does not refetch every keystroke's list. The key used to be the text
+  // alone, so the same text under another country filter, language or
+  // political view was answered with the first one's list, for every form on
+  // the page (#31). The `["typeahead"]` prefix every invalidation uses still
+  // matches.
+  const { BiasPosition: _bias, ...shaping } = apiInput ?? {};
   return useQuery({
     enabled,
-    queryKey: ["typeahead", apiName, apiInput?.QueryText], // Only trigger calls if on query text change
+    queryKey: ["typeahead", apiName, shaping],
     // React Query hands `queryFn` an AbortSignal and aborts it as soon as the
     // query is superseded or unmounted. Forwarding it is the whole point of
     // this hook's existence in a typeahead: without it, every keystroke's

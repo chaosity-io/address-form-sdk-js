@@ -1,6 +1,6 @@
+import { Marker } from "@vis.gl/react-maplibre";
 import type { Marker as MaplibreMarker } from "maplibre-gl";
 import { useRef, useState } from "react";
-import { Marker } from "react-map-gl/maplibre";
 import type { ColorScheme } from "../Map/index.tsx";
 import { AdjustButton } from "./AdjustButton";
 import { buttons } from "./styles.css.ts";

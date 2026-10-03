@@ -135,6 +135,8 @@ interface ClientError {
   code?: string;
   statusCode?: number;
   message?: string;
+  /** The wait a 429's `Retry-After` asked for, when it sent one. */
+  retryAfterMs?: number;
 }
 
 const asClientError = (error: unknown): ClientError | undefined => {
@@ -160,19 +162,33 @@ const describe = (error: unknown, description: string): string | undefined => {
 
   if (!e) return `${description} ${verb} currently unavailable.`;
 
+  // The wait the service asked for, when it said; otherwise a moment (#42).
+  const seconds = e.retryAfterMs && e.retryAfterMs > 0 ? Math.ceil(e.retryAfterMs / 1000) : undefined;
+  const tooMany = `Too many requests. ${description} will be available again ${
+    seconds ? `in about ${seconds} ${seconds === 1 ? "second" : "seconds"}` : "in a moment"
+  }.`;
+
   switch (e.code) {
     case "AbortedException":
       return undefined;
     case "TimeoutException":
     case "NetworkException":
       return `${description} ${verb} taking too long. Check your connection and try again.`;
+    // The API's 429s: an application over its own rate, an address over the
+    // token route's limit, and Amazon's own throttle. Only the last used to
+    // get this text, so the other two read as an outage (#42).
+    case "RateLimitExceededException":
+    case "IpRateLimitExceededException":
     case "ThrottlingException":
-      return `Too many requests. ${description} will be available again in a moment.`;
+      return tooMany;
     case "ValidationException":
       return `${description} could not be completed — the request was not valid.`;
     default:
       break;
   }
+
+  // A 429 under any other code is the same answer: wait, then try again.
+  if (e.statusCode === 429) return tooMany;
 
   if (e.statusCode === 401 || e.statusCode === 403) {
     return `${description} ${verb} not available for this application. Check its configuration.`;

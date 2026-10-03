@@ -20,14 +20,13 @@ vi.mock("../MapMarker", () => ({
   MapMarker: () => <div data-testid="map-marker"></div>,
 }));
 
+// One Typeahead mock for the whole file: vitest hoists every vi.mock, so a
+// second one written inside a test replaced this one for every test (#39). A
+// typed value reaches the form through `onChange`, as typing without picking
+// a suggestion does.
 vi.mock("../Typeahead", () => ({
-  Typeahead: ({ id, onSelect, placeholder }: TypeaheadProps) => {
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      const value = e.target.value;
-      onSelect({ addressLineOneField: value });
-    };
-
-    return <input data-testid={id} id={id} placeholder={placeholder} onChange={handleChange} />;
+  Typeahead: ({ id, onChange, placeholder }: TypeaheadProps) => {
+    return <input data-testid={id} id={id} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
   },
 }));
 
@@ -154,12 +153,6 @@ describe("AddressForm", () => {
   });
 
   it("submits manually entered address line one without dropdown selection", async () => {
-    vi.mock("../Typeahead", () => ({
-      Typeahead: ({ id, onChange, placeholder }: TypeaheadProps) => {
-        return <input data-testid={id} id={id} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
-      },
-    }));
-
     const { getByLabelText, getByRole } = renderWithProvider(
       <AddressForm typeahead={{ apiName: "autocomplete" }} {...mockProps} />,
     );
