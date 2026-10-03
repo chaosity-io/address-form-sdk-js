@@ -5,7 +5,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useNotificationStore } from "../../stores/notificationStore";
 import { renderWithProvider, untilClient } from "../../test/utils";
 import * as api from "../../utils/api";
-import { queryClient } from "../../utils/query-client";
 import type { AddressFormData } from "./AddressForm";
 import { AddressForm } from "./AddressForm";
 import { render } from "./render";
@@ -123,7 +122,6 @@ const respondWith = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
 beforeEach(() => {
-  queryClient.clear();
   useNotificationStore.getState().clearNotifications();
   vi.mocked(api.autocomplete).mockResolvedValue({
     ResultItems: PLACES.filter((p) => p.PlaceType !== "SecondaryAddress").map((p) => ({

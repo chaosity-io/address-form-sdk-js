@@ -4,7 +4,7 @@ import { render } from "./render";
 
 // MapLibre needs WebGL, which jsdom has not got. The mock shows what the map
 // was given: its style, and whether it drew the navigation control.
-vi.mock("react-map-gl/maplibre", () => ({
+vi.mock("@vis.gl/react-maplibre", () => ({
   default: ({ children, mapStyle }: { children?: React.ReactNode; mapStyle?: string }) => (
     <div data-testid="maplibre-map" data-mapstyle={mapStyle}>
       {children}

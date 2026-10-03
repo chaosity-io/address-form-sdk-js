@@ -72,8 +72,9 @@ export function LocateButton({ onLocate, apiName, className = "", ...restProps }
           : addressLineOneFallback;
 
         onLocate({
-          // The PlaceId looked up, not the one GetPlace answers with: for a
-          // unit those differ, and only this one resolves again (#21).
+          // The PlaceId looked up, not the one GetPlace answers with: the
+          // service answered with the same one when measured on 3 Oct 2026,
+          // but this one is known to resolve, whatever it answers (#21).
           placeId,
           addressLineOneField,
           fullAddress: placeResult.Address,

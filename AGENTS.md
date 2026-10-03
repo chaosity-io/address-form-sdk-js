@@ -34,12 +34,29 @@ npm run lint:fix         # eslint --fix . && prettier --write .
 push takes a while and fails if either bundle breaks — and last `npm run test:dist`
 on what the build produced. Type errors that vitest tolerates are stopped here.
 
-## Two entry points, two builds
+## Three entry points, two builds
 
-| Entry                     | Built by           | For                                        |
-| ------------------------- | ------------------ | ------------------------------------------ |
-| `lib/main.tsx`            | `build:lib`        | the React library — the published package  |
-| `lib/main-standalone.tsx` | `build:standalone` | a self-mounting bundle exposing `render()` |
+| Entry                     | Built by           | For                                                                 |
+| ------------------------- | ------------------ | ------------------------------------------------------------------- |
+| `lib/main.tsx`            | `build:lib`        | the React library — the published package, a `"use client"` module  |
+| `lib/main-data.ts`        | `build:lib`        | `@chaosity/address-form/data`: the data and helpers, for the server |
+| `lib/main-standalone.tsx` | `build:standalone` | a self-mounting bundle exposing `render()`                          |
+
+**The main entry is a client module, and `/data` is not (#34).** The library
+creates React contexts at the top level, so without a directive a Next.js
+Server Component that imported anything from it answered 500 ("createContext
+only works in Client Components"). `vite.config.ts` puts `"use client"` in
+the main entry's two files as a banner, so it is each file's first statement
+whatever the bundler emits. A client module hands a Server
+Component its exports as references, not values, so `countries` and the three
+helpers also have an entry of their own that carries no directive and loads
+nothing from React. Anything added to `lib/main-data.ts` must keep it that way:
+`npm run test:dist` follows `/data` and every chunk it loads, and fails on a
+directive or a React import. The two entries share chunks; the ESM ones are
+`.mjs`, as the entries are, because this package is not `"type": "module"`.
+`package.json` `typesVersions` maps `data` to its declarations, because a
+consumer on `moduleResolution: node` (node10) ignores `exports`; the smoke
+compiles both entries under `node10` and `bundler`.
 
 `npm run build` runs both, and **both must be run before publishing** —
 `prepublishOnly` does this for you. Building only the lib silently ships a
@@ -65,8 +82,8 @@ its own `import.meta.url`, which a bundler rewrites and a UMD build replaces
 with `{}`, and without it the map mounts and draws no tile. So:
 
 - the React library cannot know where an application serves the file, and
-  `AddressForm.Map` takes `workerUrl`, which react-map-gl hands to
-  `setWorkerUrl` before it builds the map. The README's example passes it;
+  `AddressForm.Map` takes `workerUrl`, which `@vis.gl/react-maplibre` hands
+  to `setWorkerUrl` before it builds the map. The README's example passes it;
 - the standalone bundle carries the worker. `vite-plugin-maplibre-worker.ts`
   bundles it and the chunk it imports into one module string, and
   `main-standalone.tsx` hands MapLibre a `blob:` URL of it. Both Vite configs
@@ -83,7 +100,8 @@ standalone entry to its `setWorkerUrl` call.
 
 `build:lib` emits `address-form-sdk.mjs` and `address-form-sdk.cjs.js`, and
 `package.json` `exports` sends `import` to the first and `require` to the
-second. Until #29 it was CommonJS only, and that broke the README's own
+second. `/data` gets the same pair, `data.mjs` and `data.cjs.js`, and the two
+entries share chunks (`utils-<hash>.mjs`, `utils-<hash>.js`) (#34). Until #29 it was CommonJS only, and that broke the README's own
 example: client-react ships separate import and require builds, each calling
 `createContext`, so the provider an application imported and the one the
 form's hooks read were two copies, and the form threw "useLocationClient must
@@ -115,6 +133,27 @@ existed. Consumers on `bundler` resolution are unaffected. A separate
 `main.d.mts` for the `import` condition would need rolled-up declarations,
 because a `.d.mts` needs file extensions on its relative imports. Accepted as
 it stands (26 Sep 2026); revisit if a `node16` consumer reports it.
+
+### Every package the library names is declared, and every dependency named
+
+The library build bundles what it does not list as external, and an external
+is an import the consumer's install has to satisfy. So `vite.config.ts`'s
+`external` holds only packages `package.json` declares, as a dependency or a
+peer, and a dependency the build bundles or compiles away (`clsx`,
+`@vanilla-extract/css`) is a devDependency. The library used to import
+`@vis.gl/react-maplibre` without declaring it: it reached it through
+`react-map-gl/maplibre`, a re-export the build bundled, and it resolved only
+because npm hoists it, so Yarn PnP and pnpm refused the import (#33). The map
+imports `@vis.gl/react-maplibre` directly now. The published declarations
+count too: `lib/test/` is not built into them, and `lib/utils/queries.ts`
+names its output types from `@chaosity/location-client`, because inferred
+they were written as imports of `@aws-sdk/client-geo-places`.
+
+`npm run test:dist` checks the packed package both ways. Every package its
+`dist/lib` JavaScript or declarations name must be declared, and every
+dependency must be named there or listed in the check with the reason
+something else loads it, as `maplibre-gl` is: `@vis.gl/react-maplibre`
+imports it, as an optional peer it does not install.
 
 ## A component that reads the provider handles `client: null`
 
@@ -175,9 +214,12 @@ Three rules there cost money or correctness if broken:
 `placeId` is the PlaceId that was chosen and sent, never the one a GetPlace
 response carries: `buildOutput` in the Typeahead takes it as an argument, and
 the locate button and the autofill handler keep the one they looked up. Asked
-for a unit, Amazon answers with a different PlaceId that every Places route
-then fails upstream (a 502, measured 25 Sep 2026). Recording the response's id
-made every unit's verification fail. `lib/components/Typeahead/chosen-place-id.test.tsx`
+for a unit, Amazon answered with a different PlaceId that every Places route
+then failed upstream (a 502, measured 25 Sep 2026), and recording the
+response's id made every unit's verification fail. The service has since
+answered GetPlace and verify with the PlaceId sent (measured 3 Oct 2026, a
+unit's id on both), so the two agree; the rule stays, because it holds
+whatever a response carries. `lib/components/Typeahead/chosen-place-id.test.tsx`
 holds the three pick paths to it, and `verify.test.tsx` the autofill one.
 
 It needs `@chaosity/location-client` 0.10.0 or later, the release that added
@@ -196,9 +238,11 @@ and the standalone bundle carries whichever copy the lockfile installed.
 **`@headlessui/react` must stay at or above `2.2.10`.** Versions up to `2.2.9`
 throw a `DataInteractive` Fragment error on cold loads under React 19 with a
 React-Server-Components host — which is exactly how this SDK gets consumed. The
-manifest range is `^2.2.2`, so the lockfile is what actually holds the floor; a
-lockfile regeneration that resolves lower reintroduces a crash that only appears
-on a cold load and will not reproduce locally in a warm dev server.
+range is `^2.2.10`, the floor itself. It used to be `^2.2.2`, which held the
+floor only for the standalone bundle, through this lockfile: it is a
+dependency, so a React consumer's own install could resolve 2.2.9, and the
+crash appears only on a cold load, never in a warm dev server.
+`lib/headlessui-floor.test.ts` holds the range and every lockfile copy to it.
 
 **React 19 only.** The peer range is `^19.0.0` for both `react` and `react-dom`
 — no React 18. That is a deliberate narrowing, not an oversight.
@@ -285,8 +329,7 @@ and the standalone bundle then carries two clients. Count them with
   a runtime CSS-in-JS library alongside it.
 - State: `zustand` stores in `lib/stores`, form data in `AddressFormContext`
   (`AddressFormProvider`), server state via `@tanstack/react-query`. Reach for
-  the one already in use. `react-hook-form` is declared but nothing imports it
-  (#33).
+  the one already in use.
 - Tests are vitest with `lib/setup-tests.ts`; `lib/stories.test.tsx` renders the
   Storybook stories, so a broken story fails the suite.
 - Prettier runs with `prettier-plugin-organize-imports` — do not hand-sort

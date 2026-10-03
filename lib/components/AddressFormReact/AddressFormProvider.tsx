@@ -3,7 +3,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import type { FunctionComponent, PropsWithChildren } from "react";
 import { useMemo, useState } from "react";
 import { countries } from "../../data/countries";
-import { queryClient } from "../../utils/query-client";
+import { createQueryClient } from "../../utils/query-client";
 import type { TypeaheadAPIName } from "../Typeahead/use-typeahead-query";
 import type { AddressFormData } from "./AddressForm";
 import type { AddressFormContextType, MapViewState } from "./AddressFormContext";
@@ -112,6 +112,9 @@ export const AddressFormProvider: FunctionComponent<AddressFormProps> = ({
       typeaheadApiName,
     ],
   );
+
+  // This form's own cache, for the form's lifetime: never another form's.
+  const [queryClient] = useState(createQueryClient);
 
   return (
     <QueryClientProvider client={queryClient}>

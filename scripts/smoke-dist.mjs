@@ -104,6 +104,22 @@ try {
   console.log("FAILED  ESM: the README's stylesheet: " + (error instanceof Error ? error.message : error));
 }
 
+// \`/data\`, through \`exports\` (#34): the data and helpers as values, and the
+// same values the main entry exports, not a second copy of them.
+try {
+  const data = await import("@chaosity/address-form/data");
+  if (!Array.isArray(data.countries) || data.countries.length < 200) throw new Error("countries is not the country list");
+  for (const name of ["getIncludeCountriesFilter", "getColorScheme", "getMapStyleType"]) {
+    if (typeof data[name] !== "function") throw new Error(name + " is not a function");
+  }
+  if (data.getIncludeCountriesFilter(true, "GB", ["AU"])?.[0] !== "GB") throw new Error("getIncludeCountriesFilter did not run");
+  if ((library.default ?? library).countries !== data.countries) throw new Error("the main entry's countries is another copy");
+  console.log("ok      ESM: /data exports the data and helpers as values, shared with the main entry");
+} catch (error) {
+  failed = true;
+  console.log("FAILED  ESM: /data: " + (error instanceof Error ? error.message : error));
+}
+
 check(
   "ESM: exported Typeahead under the application's QueryClientProvider",
   () =>
@@ -170,6 +186,17 @@ ${README_TREE}
 
 check("CJS: README tree, provider from @chaosity/location-client-react", readmeTree, /name="addressLineOne"/);
 
+// \`/data\` through \`require\` too (#34).
+try {
+  const data = require("@chaosity/address-form/data");
+  if (!Array.isArray(data.countries) || data.countries.length < 200) throw new Error("countries is not the country list");
+  if (require("@chaosity/address-form").countries !== data.countries) throw new Error("the main entry's countries is another copy");
+  console.log("ok      CJS: /data exports the data as values, shared with the main entry");
+} catch (error) {
+  failed = true;
+  console.log("FAILED  CJS: /data: " + (error instanceof Error ? error.message : error));
+}
+
 process.exitCode = failed ? 1 : 0;
 `;
 
@@ -205,6 +232,131 @@ try {
       mkdirSync(dirname(at), { recursive: true });
       symlinkSync(join(installed, name), at, "dir");
     }
+  }
+
+  // What the library's files name, against what its package.json declares
+  // (#33). The links above resolve anything this repository installed, the way
+  // npm's hoisting does, so an undeclared import passes everything else here
+  // and fails only under an installer that does not hoist (Yarn PnP, pnpm).
+  // Its JavaScript and its declarations both count: a consumer's compiler
+  // opens the .d.ts files, deep imports through `./dist/*` included. The other
+  // direction too: a runtime dependency nothing names is installed for nothing,
+  // unless it is listed here with the reason something else loads it.
+  try {
+    const LOADED_BY_ANOTHER = {
+      "maplibre-gl":
+        "imported by @vis.gl/react-maplibre, which declares it an optional peer; its stylesheet is in address-form.css",
+    };
+    const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
+    const declared = new Set(Object.keys({ ...manifest.dependencies, ...manifest.peerDependencies }));
+    const files = execFileSync(
+      "find",
+      [
+        join(packageDir, "dist/lib"),
+        "-type",
+        "f",
+        "(",
+        "-name",
+        "*.mjs",
+        "-o",
+        "-name",
+        "*.js",
+        "-o",
+        "-name",
+        "*.d.ts",
+        ")",
+      ],
+      {
+        encoding: "utf8",
+      },
+    )
+      .split("\n")
+      .filter(Boolean);
+    const named = new Map();
+    for (const file of files) {
+      const text = readFileSync(file, "utf8");
+      for (const [, spec] of text.matchAll(/(?:from|import|require)\s*\(?\s*["']([^"'.][^"']*)["']/g)) {
+        if (spec.startsWith("node:")) continue;
+        const pkg = spec.startsWith("@") ? spec.split("/").slice(0, 2).join("/") : spec.split("/")[0];
+        if (!named.has(pkg)) named.set(pkg, file.slice(packageDir.length + 1));
+      }
+    }
+    const undeclared = [...named].filter(([pkg]) => !declared.has(pkg)).map(([pkg, file]) => `${pkg} (${file})`);
+    const unused = Object.keys(manifest.dependencies ?? {}).filter((d) => !named.has(d) && !LOADED_BY_ANOTHER[d]);
+    if (named.size === 0) throw new Error("found no imports in dist/lib, so the check read nothing");
+    if (undeclared.length) throw new Error("named but not declared: " + undeclared.join(", "));
+    if (unused.length) throw new Error("declared dependencies nothing names: " + unused.join(", "));
+    console.log(`ok      lib: names ${named.size} packages, every one declared; every dependency named or listed`);
+  } catch (error) {
+    failed = true;
+    console.log("FAILED  lib: " + (error instanceof Error ? error.message : error));
+  }
+
+  // The module boundary a React Server Component sees (#34). The main entry
+  // creates React contexts at the top level, so it has to be a client module:
+  // without "use client", a Server Component that imported anything from the
+  // package answered 500 ("createContext only works in Client Components").
+  // A client module hands a Server Component its exports as references, not
+  // values, so the data and helpers have an entry of their own, `/data`, which
+  // must carry no directive and load nothing from React.
+  try {
+    const lib = join(packageDir, "dist/lib");
+    const directive = (file) => /^\s*["']use client["'];?/.test(readFileSync(join(lib, file), "utf8"));
+    for (const main of ["address-form-sdk.mjs", "address-form-sdk.cjs.js"]) {
+      if (!directive(main)) throw new Error(`${main} does not begin with "use client"`);
+    }
+    for (const entry of ["data.mjs", "data.cjs.js"]) {
+      // The entry and every chunk it loads, by relative specifier.
+      const seen = new Set();
+      const queue = [entry];
+      while (queue.length) {
+        const file = queue.shift();
+        if (seen.has(file)) continue;
+        seen.add(file);
+        const text = readFileSync(join(lib, file), "utf8");
+        if (directive(file)) throw new Error(`${file}, loaded by ${entry}, carries "use client"`);
+        if (/(?:from|require\()\s*["'`]react(?:-dom)?(?:\/[^"'`]*)?["'`]/.test(text) || /createContext/.test(text)) {
+          throw new Error(`${file}, loaded by ${entry}, loads React`);
+        }
+        for (const [, rel] of text.matchAll(/(?:from|require\()\s*["'`]\.\/([^"'`]+)["'`]/g)) queue.push(rel);
+      }
+    }
+    console.log('ok      lib: the main entry is "use client"; /data loads nothing from React');
+  } catch (error) {
+    failed = true;
+    console.log("FAILED  lib: " + (error instanceof Error ? error.message : error));
+  }
+
+  // Both entries' types, as a TypeScript consumer resolves them (#34). Under
+  // `moduleResolution: node` (node10) TypeScript ignores `exports`, so `/data`
+  // has its types only through `typesVersions`; `bundler` reads `exports`.
+  try {
+    writeFileSync(
+      join(scratch, "types.ts"),
+      [
+        'import { countries } from "@chaosity/address-form/data";',
+        'import { AddressForm } from "@chaosity/address-form";',
+        "export const n: number = countries.length;",
+        "export { AddressForm };",
+      ].join("\n"),
+    );
+    const tsc = join(root, "node_modules/typescript/bin/tsc");
+    for (const [resolution, module] of [
+      ["node10", "esnext"],
+      ["bundler", "esnext"],
+    ]) {
+      const args = ["--noEmit", "--strict", "--skipLibCheck", "--jsx", "react-jsx", "--target", "es2022"];
+      const { status, stdout } = spawnSync(
+        process.execPath,
+        [tsc, ...args, "--module", module, "--moduleResolution", resolution, "types.ts"],
+        { cwd: scratch, encoding: "utf8" },
+      );
+      if (status !== 0) throw new Error(`moduleResolution ${resolution}: ${stdout.split("\n")[0]}`);
+    }
+    console.log("ok      types: both entries resolve under moduleResolution node10 and bundler");
+  } catch (error) {
+    failed = true;
+    console.log("FAILED  types: " + (error instanceof Error ? error.message : error));
   }
 
   // The standalone bundle carries MapLibre, so a page runs the copy it was

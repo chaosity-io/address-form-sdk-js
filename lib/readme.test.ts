@@ -30,6 +30,53 @@ describe("README", () => {
   });
 
   /**
+   * The README said `data-api-name` defaulted to `"suggest"` while both places
+   * that read it default to `"autocomplete"` (#38), so a page leaving it out
+   * got a different API, and a different bill, from the one documented. Every
+   * default the attribute tables state is held to the code that applies it:
+   * the `?? value` where a field reads its attribute (the React fields and
+   * render(), which must agree), or the component's own default where render()
+   * passes the attribute through.
+   */
+  it("states the default the code applies, for every attribute with one (#38)", () => {
+    const unquote = (v: string) => v.replace(/^`|`$/g, "").replace(/^"|"$/g, "");
+    // A row is `| \`data-x\` | default | …` (the field tables) or
+    // `| prop | type | \`data-x\` | default | …` (the map table).
+    const stated = new Map<string, string>();
+    for (const line of README.split("\n")) {
+      const cells = line.split("|").map((c) => c.trim());
+      const i = cells.findIndex((c) => /^`data-[a-z-]+`$/.test(c));
+      if (i < 0 || !cells[i + 1] || cells[i + 1] === "-") continue;
+      stated.set(cells[i].slice(1, -1), unquote(cells[i + 1]));
+    }
+
+    const camel = (attr: string) => attr.slice(5).replace(/-([a-z])/g, (_, c: string) => c.toUpperCase());
+    const fields = read("lib/components/AddressFormReact/AddressFormFields.tsx");
+    const render = read("lib/components/AddressFormReact/render.tsx");
+    const components = globSync("lib/components/**/*.tsx", { cwd: root, ignore: ["**/*.test.*"] })
+      .map(read)
+      .join("\n");
+
+    const wrong: string[] = [];
+    for (const [attr, value] of stated) {
+      const applied = [
+        new RegExp(`\\(rest, "${attr}"\\) \\?\\? ("?[\\w-]+"?)`).exec(fields)?.[1],
+        new RegExp(`\\(element\\.dataset, "${camel(attr)}"\\) \\?\\? ("?[\\w-]+"?)`).exec(render)?.[1],
+      ].filter((v): v is string => v !== undefined);
+      // Passed through as undefined: the component's parameter default decides.
+      if (applied.length === 0) {
+        const param = new RegExp(`\\b${camel(attr)} = ("?[\\w-]+"?),`).exec(components)?.[1];
+        if (param !== undefined) applied.push(param);
+      }
+      if (applied.length === 0) wrong.push(`${attr}: no default found in the code`);
+      for (const v of applied) if (unquote(v) !== value) wrong.push(`${attr}: README "${value}", code ${v}`);
+    }
+
+    expect(stated.size).toBeGreaterThanOrEqual(4);
+    expect(wrong).toEqual([]);
+  });
+
+  /**
    * The troubleshooting links used to name a path the documentation site no
    * longer serves (a 404), and one of them is printed to the console for every
    * failed request. Whether a URL answers is a network question, so this holds
