@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useNotificationStore } from "../../stores/notificationStore";
 import * as api from "../../utils/api";
+import type { RenderParams } from "./render";
 import { render } from "./render";
 
 vi.mock("../../utils/api", async (importOriginal) => {
@@ -15,6 +16,22 @@ const mockGetConfig = async () => ({
   apiUrl: "https://test-api.chaosity.cloud",
   token: "test-token",
   expiresAt: Date.now() + 900_000,
+});
+
+describe("render's getConfig", () => {
+  it("takes the request the provider passes after the API refuses a token (client-react#43)", () => {
+    // From @chaosity/location-client-react 0.10.0 the provider calls getConfig
+    // with { refusedToken } after a 401, and render hands the function to it
+    // as it is. A getConfig that names the parameter has to fit the type; with
+    // a getConfig typed as taking nothing, this does not compile (tsc -b).
+    // render-getconfig.test.tsx holds the runtime half.
+    const getConfig = async (request: { refusedToken: string } | undefined) => ({
+      ...(await mockGetConfig()),
+      token: request ? "replacement-token" : "test-token",
+    });
+    const accepted: RenderParams["getConfig"] = getConfig;
+    expect(accepted).toBe(getConfig);
+  });
 });
 
 describe("render", () => {
