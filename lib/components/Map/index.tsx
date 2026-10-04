@@ -1,10 +1,12 @@
-import { buildMapStyleUrl, createTransformRequest } from "@chaosity/location-client";
+import { buildMapStyleUrl, createTransformRequest, refreshTokenOnUnauthorized } from "@chaosity/location-client";
 import { useLocationClient } from "@chaosity/location-client-react";
-import type { MapProps as MapLibreMapProps } from "@vis.gl/react-maplibre";
+import type { MapProps as MapLibreMapProps, MapRef } from "@vis.gl/react-maplibre";
 import MapLibreMap, { NavigationControl } from "@vis.gl/react-maplibre";
-import { useEffect, useMemo } from "react";
+import type { MutableRefObject, Ref } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Logo } from "../../icons/Logo";
 import { logo } from "./styles.css";
+import { tokenLedger } from "./tokenLedger";
 import { getColorScheme, getMapStyleType } from "./utils";
 
 export type ColorScheme = "Light" | "Dark";
@@ -53,16 +55,98 @@ export function Map({
   children,
   ...rest
 }: MapProps) {
-  const { client, getToken, apiUrl: providerApiUrl } = useLocationClient();
+  const { client, getToken, refreshToken, apiUrl: providerApiUrl } = useLocationClient();
   // The API the provider's token is for (#16). The prop used to be the only
   // source, and neither README example passes one.
   const apiUrl = apiUrlProp ?? providerApiUrl ?? undefined;
   const mapStyle = getMapStyle(extendedMapStyle, apiUrl, politicalView);
 
+  // What this configuration's maps know about their tokens: which token each
+  // request carried, and what each refresh brought (location-service-client#72).
+  const ledger = useMemo(() => tokenLedger(getToken, refreshToken), [getToken, refreshToken]);
+
   const mapTransformRequest = useMemo(() => {
     if (!apiUrl) return undefined;
-    return createTransformRequest(apiUrl, getToken);
-  }, [apiUrl, getToken]);
+    const attach = createTransformRequest(apiUrl, getToken);
+    // Each request's token is noted, so a refusal is read against it.
+    return ((url, resourceType) => {
+      const request = attach(url, resourceType);
+      // `createTransformRequest` answers synchronously; a promise is MapLibre's type, not its answer.
+      const bearer: unknown = request && "headers" in request ? request.headers?.Authorization : undefined;
+      if (request && "url" in request && typeof bearer === "string")
+        ledger.sent(request.url, bearer.slice("Bearer ".length));
+      return request;
+    }) as typeof attach;
+  }, [apiUrl, getToken, ledger]);
+
+  // @vis.gl/react-maplibre sets its ref once its map exists, after its own
+  // first render, so a callback ref is what hears of it.
+  const [mapRef, setMapRef] = useState<MapRef | null>(null);
+
+  // A tile the API refuses before its token's exp (a revoked token, a rotated
+  // secret) asks the provider for a new token once, and is reloaded with it,
+  // by the client library's helper. Its `tokens` is one object per
+  // configuration, because the helper tracks a refused token per object.
+  useEffect(() => {
+    const map = mapRef?.getMap();
+    if (!map || !apiUrl) return;
+    return refreshTokenOnUnauthorized(map, apiUrl, ledger.tokens);
+  }, [mapRef, apiUrl, ledger]);
+
+  // A refused style is not a tile: the helper above replaces the token for the
+  // next request and reloads nothing, and MapLibre does not ask for a style
+  // again. So the style is set again: at once when it was sent with a token
+  // since replaced, else once per refused token when the provider's refresh
+  // (the same one the helper asks for) brought a new token. The token that
+  // refresh brought, refused too, is not asked about: the form says so.
+  useEffect(() => {
+    const map = mapRef?.getMap();
+    // A style given as an object was never requested, so it is never refused.
+    if (!map || typeof mapStyle !== "string") return;
+    let askedFor: string | undefined;
+    // The refresh outlives this listener: a map gone by the time it settles is
+    // left alone.
+    let active = true;
+    // Not a diff: the refused style never loaded, so there is nothing to diff against.
+    const setAgain = () => {
+      if (active) map.setStyle(mapStyle, { diff: false });
+    };
+    const onError = (event: { error?: unknown }) => {
+      // MapLibre's AJAXError carries the status and the URL it was refused for.
+      const { status, url } = (event.error ?? {}) as { status?: number; url?: string };
+      if (status !== 401 || url !== mapStyle) return;
+      const refusal = ledger.refusal(url);
+      if (refusal === "stale") return setAgain();
+      if (refusal === "again") return;
+      const refused = getToken();
+      if (!refused || refused === askedFor) return;
+      askedFor = refused;
+      ledger.tokens.refreshToken().then(
+        () => {
+          const now = getToken();
+          if (now && now !== refused) setAgain();
+        },
+        () => {},
+      );
+    };
+    map.on("error", onError);
+    return () => {
+      active = false;
+      map.off("error", onError);
+    };
+  }, [mapRef, mapStyle, ledger, getToken]);
+
+  // A ref the caller passes (React 19 hands a function component its ref as a
+  // prop) still receives the map, and does not take the place of the one above.
+  const callerRef = (rest as { ref?: Ref<MapRef> }).ref;
+  const setRefs = useCallback(
+    (handle: MapRef | null) => {
+      setMapRef(handle);
+      if (typeof callerRef === "function") callerRef(handle);
+      else if (callerRef) (callerRef as MutableRefObject<MapRef | null>).current = handle;
+    },
+    [callerRef],
+  );
 
   useEffect(() => {
     if (client && !mapStyle) {
@@ -89,6 +173,7 @@ export function Map({
       validateStyle={false}
       style={MAP_BOX}
       {...rest}
+      ref={setRefs}
     >
       {showNavigationControl && <NavigationControl />}
 

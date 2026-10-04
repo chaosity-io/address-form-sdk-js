@@ -15,6 +15,15 @@ vi.mock("../Map", () => ({
   )),
 }));
 
+// The provider's token, and what its refresh does to it, per test.
+const provider = vi.hoisted(() => ({
+  token: "token-1" as string | undefined,
+  refreshToken: vi.fn(async (): Promise<string | undefined> => undefined),
+}));
+vi.mock("@chaosity/location-client-react", () => ({
+  useLocationClient: () => ({ getToken: () => provider.token, refreshToken: provider.refreshToken }),
+}));
+
 vi.mock("../MapMarker", () => ({
   MapMarker: vi.fn((props) => (
     <div
@@ -84,19 +93,24 @@ describe("AddressFormMap — a refused map", () => {
   beforeEach(() => {
     useNotificationStore.getState().clearNotifications();
     consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    provider.token = "token-1";
+    // By default the provider has no other token to give. A new function per
+    // test, as each provider configuration has its own: the map's bounded
+    // refresh is kept per function.
+    provider.refreshToken = vi.fn(async (): Promise<string | undefined> => provider.token);
   });
   afterEach(() => {
     consoleError.mockRestore();
   });
 
   const renderWith = (props: Partial<Parameters<typeof AddressFormMap>[0]>) => {
-    render(
+    const { unmount } = render(
       <AddressFormContext.Provider value={mockContextValue}>
         <AddressFormMap mapStyle={["Standard", "Light"]} {...props} />
       </AddressFormContext.Provider>,
     );
     const onError = vi.mocked(Map).mock.calls.at(-1)![0].onError as (e: unknown) => void;
-    return { onError };
+    return { onError, unmount };
   };
 
   const shown = () => useNotificationStore.getState().notifications.map((n) => n.message);
@@ -145,21 +159,26 @@ describe("AddressFormMap — a refused map", () => {
     await waitFor(() => expect(shown()).toEqual(["Map rendering is currently unavailable."]));
   });
 
-  // A 401 used to return early like any other non-403, so a map the service
-  // refused for its token stayed blank with nothing said (#25).
-  it("says so for a 401: the service did not accept the map's token", async () => {
-    const { onError } = renderWith({ mapStyle: ["Standard", "Light"] });
-    onError({
-      error: {
-        status: 401,
-        url: "https://api.example.com/maps/Standard/descriptor",
-        body: new Blob([JSON.stringify({ message: "Unauthorized" })]),
-      },
-    });
+  const refused401 = {
+    error: {
+      status: 401,
+      url: "https://api.example.com/maps/Standard/descriptor",
+      body: new Blob([JSON.stringify({ message: "Unauthorized" })]),
+    },
+  };
 
-    await waitFor(() => expect(shown()).toEqual(["Map rendering is currently unavailable."]));
-    expect(logged().join("\n")).toMatch(/401/);
-    expect(logged().join("\n")).toMatch(/getConfig/);
+  // The map asks the provider for a new token and reloads what was refused
+  // (location-service-client#72). The form asked too, and each asked again for
+  // the token the other's refresh brought; it now only says what the map's
+  // ledger reports. The banner's cases are in AddressFormMap-refused-token.test.tsx.
+  it("asks nothing and says nothing for a 401 the map has not yet tried to recover from", async () => {
+    const { onError } = renderWith({ mapStyle: ["Standard", "Light"] });
+    onError(refused401);
+    await new Promise((r) => setTimeout(r, 20));
+
+    expect(provider.refreshToken).not.toHaveBeenCalled();
+    expect(shown()).toEqual([]);
+    expect(consoleError).not.toHaveBeenCalled();
   });
 
   it("stays quiet on errors that are not a 401 or a 403", async () => {

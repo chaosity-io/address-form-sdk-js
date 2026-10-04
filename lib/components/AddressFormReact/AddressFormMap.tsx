@@ -1,8 +1,12 @@
+import { FEATURE_NOT_ENTITLED } from "@chaosity/location-client";
+import { useLocationClient } from "@chaosity/location-client-react";
 import type { FunctionComponent } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { useNotificationStore } from "../../stores/notificationStore";
 import { DOCS } from "../../utils/docs";
 import type { MapProps } from "../Map";
 import { Map } from "../Map";
+import { tokenLedger } from "../Map/tokenLedger";
 import { getColorScheme, getMapStyleType } from "../Map/utils";
 import type { MapMarkerProps } from "../MapMarker";
 import { MapMarker } from "../MapMarker";
@@ -10,14 +14,6 @@ import { useAddressFormContext } from "./AddressFormContext";
 import { parsePosition } from "./utils";
 
 export type AddressFormMapProps = MapProps & Pick<MapMarkerProps, "adjustablePosition">;
-
-/**
- * The code the service answers a map option outside the application's plan
- * with (#22). A literal rather than `@chaosity/location-client`'s
- * `FEATURE_NOT_ENTITLED`: the peer range admits clients that predate that
- * export, and an `undefined` would never match.
- */
-const FEATURE_NOT_ENTITLED = "FeatureNotEntitledException";
 
 /**
  * The `{ code, message }` a refused map request carries, or nothing.
@@ -48,6 +44,29 @@ export const AddressFormMap: FunctionComponent<AddressFormMapProps> = ({
 }) => {
   const { data, setData, mapViewState, setMapViewState } = useAddressFormContext();
   const addNotification = useNotificationStore((state) => state.addNotification);
+  const { getToken, refreshToken } = useLocationClient();
+  // The map's ledger: which token each request carried, and what each refresh
+  // brought (location-service-client#72).
+  const ledger = useMemo(() => tokenLedger(getToken, refreshToken), [getToken, refreshToken]);
+  // The last refused request, which the log names. Never the event: it reaches
+  // the map's state, and a dev server that relays the console prints the
+  // bearer token with it.
+  const lastRefused = useRef<{ status?: number; url?: string }>(undefined);
+
+  const showTokenError = useCallback(() => {
+    addNotification(
+      { id: "map-token-error", type: "error", message: "Map rendering is currently unavailable." },
+      () => {
+        console.error(
+          `Map rendering failed: the service refused the map's token (401), and the provider has none it accepts. Check the token and apiUrl your getConfig returns. See ${DOCS} for setup instructions.`,
+          lastRefused.current,
+        );
+      },
+    );
+  }, [addNotification]);
+  // A refresh the map asked for that brought no other token, or failed. Heard
+  // only while this map is mounted: one gone by the time it settles says nothing.
+  useEffect(() => ledger.onUnrecoverable(showTokenError), [ledger, showTokenError]);
 
   const handleSaveMarkerPosition = (markerPosition: [number, number]) => {
     setData({ adjustedPosition: markerPosition.join(",") });
@@ -73,23 +92,22 @@ export const AddressFormMap: FunctionComponent<AddressFormMapProps> = ({
 
   const handleMapError = (error: unknown) => {
     if (!error || typeof error !== "object" || !("error" in error)) return;
-    const innerError = error.error as { status?: number; body?: unknown };
+    const innerError = error.error as { status?: number; url?: string; body?: unknown };
+    // Never the event: see lastRefused.
+    const refusedRequest = { status: innerError?.status, url: innerError?.url };
 
     // The service did not accept the token the map was sent with (#25). The map
-    // waits for the provider's token, so this is one the service refuses: a
-    // token for another API, or not a token at all. MapLibre does not ask
-    // again, and this used to return here like any other status, leaving a
-    // blank map and nothing said.
+    // asks the provider for a new one and reloads what was refused
+    // (location-service-client#72), and this says the map is unavailable only
+    // when it cannot recover: the provider's refresh brought no other token (a
+    // token route that hands the refused one back), which the ledger reports,
+    // or the token that refresh brought was refused too (a token for another
+    // API), which this request's own token says. A request sent with a token
+    // since replaced says nothing: the map sends it again. Before #25 a 401
+    // returned here like any other status, leaving a blank map and nothing said.
     if (innerError?.status === 401) {
-      addNotification(
-        { id: "map-token-error", type: "error", message: "Map rendering is currently unavailable." },
-        () => {
-          console.error(
-            `Map rendering failed: the service refused the map's token (401). Check the token and apiUrl your getConfig returns. See ${DOCS} for setup instructions.`,
-            error,
-          );
-        },
-      );
+      lastRefused.current = refusedRequest;
+      if (ledger.refusal(innerError.url) === "again") showTokenError();
       return;
     }
 
@@ -106,7 +124,7 @@ export const AddressFormMap: FunctionComponent<AddressFormMapProps> = ({
         const explanation =
           (message ?? "This application's plan does not include an option this map asks for.") + refusalHint();
         addNotification({ id: "map-feature-error", type: "error", message: `Map unavailable: ${explanation}` }, () => {
-          console.error(`Map rendering failed: ${explanation} See ${DOCS} for the map options.`, error);
+          console.error(`Map rendering failed: ${explanation} See ${DOCS} for the map options.`, refusedRequest);
         });
         return;
       }
@@ -120,7 +138,7 @@ export const AddressFormMap: FunctionComponent<AddressFormMapProps> = ({
         () => {
           console.error(
             `Map rendering failed: This is likely due to insufficient permissions. See ${DOCS} for setup instructions.`,
-            error,
+            refusedRequest,
           );
         },
       );
