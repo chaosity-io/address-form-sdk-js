@@ -54,8 +54,8 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@chaosity/location-client": "^0.12.0",
-    "@chaosity/location-client-react": "^0.9.0",
+    "@chaosity/location-client": "^0.13.0",
+    "@chaosity/location-client-react": "^0.10.0",
     "@eslint/js": "^10",
     "@storybook/react-vite": "^10",
     "@tanstack/react-query": "^5.81.5",
