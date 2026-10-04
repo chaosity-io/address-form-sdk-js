@@ -64,9 +64,15 @@ import { LocationClientProvider } from "@chaosity/location-client-react";
 import { AddressForm, Flex } from "@chaosity/address-form";
 import "@chaosity/address-form/dist/lib/address-form.css";
 
-async function getConfig() {
-  // Fetch a token from your backend
-  const res = await fetch("/api/location-token");
+async function getConfig(request) {
+  // Fetch a token from your backend. From @chaosity/location-client-react
+  // 0.10.0, after a 401 the provider names the refused token: post it, so
+  // your backend replaces that one rather than hand it back.
+  const res = await fetch("/api/location-token", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(request ?? {}),
+  });
   // Reject on an error status, so the form reports a failed getConfig
   // instead of taking the error body for a configuration
   if (!res.ok) throw new Error(`token route answered ${res.status}`);
@@ -145,8 +151,14 @@ export default function App() {
     <script>
       AddressFormSDK.render({
         root: "#address-form",
-        getConfig: async () => {
-          const res = await fetch("/api/location-token");
+        getConfig: async (request) => {
+          // After a 401 it names the refused token (the bundle's client-react
+          // 0.10.0 or later): post it to your backend
+          const res = await fetch("/api/location-token", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify(request ?? {}),
+          });
           if (!res.ok) throw new Error(`token route answered ${res.status}`);
           return res.json(); // { apiUrl, token, expiresAt }
         },

@@ -22,7 +22,14 @@ import { getBoolean, getString } from "./utils";
 
 export interface RenderParams {
   root: string;
-  getConfig: () => Promise<ClientConfig & { expiresAt?: number }>;
+  /**
+   * Where the token and `apiUrl` come from, handed to `LocationClientProvider`
+   * as it is. When the bundle carries `@chaosity/location-client-react` 0.10.0
+   * or later, the provider calls it with `{ refusedToken }` after the API
+   * refuses a token, so your token route can replace exactly that one; every
+   * other call passes nothing.
+   */
+  getConfig: (request?: { refusedToken: string }) => Promise<ClientConfig & { expiresAt?: number }>;
   /**
    * Resolve the chosen PlaceId through `POST /address/verify` when `getData()`
    * is called, so it returns `verified` and a result you may store (#21). Off by
