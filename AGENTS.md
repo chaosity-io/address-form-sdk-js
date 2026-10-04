@@ -173,6 +173,21 @@ is a missing provider — `useLocationClient` itself throws for that. So:
   `AddressFormProvider`, so both forms carry it), and every field stays a
   plain, typeable input.
 
+## A refused map request is read against the token it carried
+
+MapLibre's `error` event for a refused request carries its status and URL,
+not the token it was sent with, and the token in hand stands in for it only
+until a refresh replaces it. A tile sent with the old token and refused after
+the new one arrived then reads as the new token refused: the form showed its
+banner while the map recovered (location-service-client#72). So `Map` notes
+each request's token as its `transformRequest` attaches it, in a ledger per
+provider configuration (`lib/components/Map/tokenLedger.ts`, keyed by the
+provider's `refreshToken`, which is one per configuration), and the form and
+the style listener read a 401 against it: sent with a token since replaced,
+it is sent again; the token a refresh brought, refused within 30 seconds, is
+the API refusing every token, and the form says so. The form never asks the
+provider itself: two askers each took the other's new token as news.
+
 ## The `__`-prefixed exports are not public API
 
 `lib/main.tsx` exports `__AddressForm` and `__AddressFormMap` from
@@ -250,8 +265,8 @@ crash appears only on a cold load, never in a warm dev server.
 ## Peer ranges are open on purpose
 
 ```json
-"@chaosity/location-client": ">=0.11.0",
-"@chaosity/location-client-react": ">=0.9.0"
+"@chaosity/location-client": ">=0.13.1",
+"@chaosity/location-client-react": ">=0.10.1"
 ```
 
 `>=`, not `^`. Both of those are pre-1.0, and npm treats each `0.x` minor as
@@ -272,7 +287,14 @@ this package depends on `maplibre-gl` 6, and npm refuses to install it beside
 client below `0.11.0` or client-react below `0.9.0`, whose peer ranges admit
 only MapLibre 5 (ERESOLVE, measured). So `0.11.0` and `0.9.0` are the oldest
 releases an install can have, and the floors say so rather than leaving npm to
-name the MapLibre peer.
+name the MapLibre peer. Then both moved for code once more: the map hands the
+provider's `refreshToken` to the client's `refreshTokenOnUnauthorized`, so a
+tile the API refuses is reloaded, and a refused style set again, with a new
+token (location-service-client#72). The client added that in `0.13.0`, and
+client-react the `refreshToken` in `0.10.1`. The client's moved once more, to
+`0.13.1`, the release whose helper stops asking when the API refuses every
+token, and reloads a tile refused after a new token arrived: the map leaves
+its tiles to that helper, and on `0.13.0` it asks again for every refusal.
 
 `@tanstack/react-query` is a peer too, and an ordinary caret one (`^5.25.0`),
 because it is past 1.0. It is a peer rather than a dependency so that the

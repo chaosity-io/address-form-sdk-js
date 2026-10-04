@@ -10,7 +10,7 @@ The SDK can be used inside a React app or as a standalone HTML/JavaScript compon
 
 You need a Chaosity Location Service account and a bearer token. Tokens are issued via your backend using the [Location Service API](https://docs.chaosity.cloud/api).
 
-The React library's peer dependencies are `@chaosity/location-client` `>=0.11.0`, `@chaosity/location-client-react` `>=0.9.0`, `@tanstack/react-query` `^5.25.0`, `react` `^19.0.0` and `react-dom` `^19.0.0`. The standalone bundle carries its own copies and needs none of them.
+The React library's peer dependencies are `@chaosity/location-client` `>=0.13.1`, `@chaosity/location-client-react` `>=0.10.1`, `@tanstack/react-query` `^5.25.0`, `react` `^19.0.0` and `react-dom` `^19.0.0`. The standalone bundle carries its own copies and needs none of them.
 
 The map is MapLibre GL JS 6.4.1 or a later 6.x release, which the package installs. Earlier releases carry [GHSA-jrc7-96c5-q579](https://github.com/advisories/GHSA-jrc7-96c5-q579), an XSS in the attribution control.
 
@@ -280,7 +280,7 @@ onSubmit: async (getData) => {
   showing it in the form's notification banner. It is not kept, so the next
   submit tries again.
 - Needs `@chaosity/location-client` 0.10.0 or later, the release that adds
-  `verify`, which this package's peer range (`>=0.11.0`) covers. Any
+  `verify`, which this package's peer range covers. Any
   `@chaosity/location-client-react` this package supports will do.
 
 ### Form Input Fields
@@ -352,9 +352,16 @@ Hybrid or Satellite style (plan feature `satellite`), or the map's
 `FeatureNotEntitledException`, and the form shows its message, which names the
 feature, with what to change. Any other refusal of the map — an origin the
 application does not allow, a plan without maps — shows "Map rendering is
-currently unavailable." and logs a pointer to the setup instructions. So does a
-map the service refuses for its token (a 401), and the log says to check the
-token and `apiUrl` your `getConfig` returns.
+currently unavailable." and logs a pointer to the setup instructions. A map the
+service refuses for its token (a 401) asks the provider for a new token once,
+and reloads the refused style or tiles with it, with nothing shown (from
+`@chaosity/location-client-react` 0.10.1 and `@chaosity/location-client`
+0.13.1). A request sent with the token before and refused after the new one
+arrived is sent again with the new one, and nothing is shown either. When the
+provider has no other token, or the service refuses the new one too, as it
+does a map whose `apiUrl` its tokens are not for, the form shows the same
+words, the log says to check the token and `apiUrl` your `getConfig` returns,
+and the map asks for no other token for 30 seconds.
 
 If `getConfig` fails, the form stays usable as a plain form. Every field can
 still be typed in, the banner says that address suggestions are unavailable and

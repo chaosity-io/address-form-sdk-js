@@ -12,7 +12,14 @@ vi.mock("@vis.gl/react-maplibre", () => ({
 // answer without `apiUrl` is its own question (location-service-client-react#39),
 // and this case is about what the map does when it meets that state.
 vi.mock("@chaosity/location-client-react", () => ({
-  useLocationClient: () => ({ client: {}, apiUrl: null, getToken: () => "token", loading: false, error: null }),
+  useLocationClient: () => ({
+    client: {},
+    apiUrl: null,
+    getToken: () => "token",
+    refreshToken: async () => "token",
+    loading: false,
+    error: null,
+  }),
 }));
 
 describe("Map without an API URL", () => {
